@@ -1,0 +1,9 @@
+[package]
+name = "conv_rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cudarc = { version = "0.12.1", features = ["cuda-version-from-build-system", "cudnn"] }
+safetensors = "0.4.5"
+bytemuck = "1.7"
