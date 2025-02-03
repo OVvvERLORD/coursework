@@ -1,6 +1,6 @@
 use crate::{
     layers::layer::Layer,
-    func::functions::Tensor_Mul
+    func::functions::{Tensor_Mul, input, output}
 };
 
 pub struct Linear{
@@ -30,9 +30,13 @@ impl Layer for Linear {
     // }
     fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
         let weights = self.weigths.clone();
-        let weights_shape = self.weights_shape.clone();
+        let mut weights_shape = self.weights_shape.clone();
         let input = args.0;
         let input_shape = args.1;
+        if weights_shape.len() != 4 {
+            weights_shape.insert(0, 1);
+            weights_shape.insert(0, 1);
+        }
         let (mut res_vec, res_vec_shape) = Tensor_Mul((input, input_shape, weights, weights_shape))?;
         if self.is_bias {
             let mut res_matr = ndarray::Array4::from_shape_vec((res_vec_shape[0],res_vec_shape[1], res_vec_shape[2], res_vec_shape[3]), res_vec)?;
@@ -62,5 +66,63 @@ impl Linear {
                 }
             }
             Self { weigths: weights_vec, weights_shape: weights_shape, bias: bias_vec, bias_shape: bias_shape, is_bias: bias }
+    }
+}
+
+#[test]
+fn test_linear_big_unbiased_sym(){
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_inp_linear.safetensors".to_string()).unwrap();
+    let (lin_w, lin_w_shape) = input(r"C:\study\coursework\src\trash\test_weight_linear.safetensors".to_string()).unwrap();
+    let lin = Linear{weigths: lin_w.to_vec(), weights_shape: lin_w_shape.to_vec(), bias : lin_w.to_vec(), bias_shape: lin_w_shape.to_vec(), is_bias: false};
+    let (res_vec, res_vec_shape) = lin.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let _ = output(r"C:\study\coursework\src\trash\test_linear_rust.safetensors".to_string(), res_vec.clone(), res_vec_shape.clone()).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_linear_python.safetensors".to_string()).unwrap();
+    assert!(res_vec_shape == py_vec_shape.to_vec());
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-67 );
+    }
+}
+
+#[test]
+fn test_linear_big_biased_sym() {
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_inp_bias_linear.safetensors".to_string()).unwrap();
+    let (lin_w, lin_w_shape) = input(r"C:\study\coursework\src\trash\test_weight_bias_linear.safetensors".to_string()).unwrap();
+    let (lin_b, lin_b_shape) = input(r"C:\study\coursework\src\trash\test_bias_linear.safetensors".to_string()).unwrap();
+    let lin = Linear{weigths: lin_w.to_vec(), weights_shape: lin_w_shape.to_vec(), bias : lin_b.to_vec(), bias_shape: lin_b_shape.to_vec(), is_bias: true};
+    let (res_vec, res_vec_shape) = lin.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let _ = output(r"C:\study\coursework\src\trash\test_linear_bias_rust.safetensors".to_string(), res_vec.clone(), res_vec_shape.clone()).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_linear_bias_python.safetensors".to_string()).unwrap();
+    assert!(res_vec_shape == py_vec_shape.to_vec());
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-67 );
+    }
+}
+
+#[test]
+fn test_linear_big_unbiased_unsym(){
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_inp_unsym_linear.safetensors".to_string()).unwrap();
+    let (lin_w, lin_w_shape) = input(r"C:\study\coursework\src\trash\test_weight_unsym_linear.safetensors".to_string()).unwrap();
+    let lin = Linear{weigths: lin_w.to_vec(), weights_shape: lin_w_shape.to_vec(), bias : lin_w.to_vec(), bias_shape: lin_w_shape.to_vec(), is_bias: false};
+    let (res_vec, res_vec_shape) = lin.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let _ = output(r"C:\study\coursework\src\trash\test_linear_unsym_rust.safetensors".to_string(), res_vec.clone(), res_vec_shape.clone()).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_linear_unsym_python.safetensors".to_string()).unwrap();
+    assert!(res_vec_shape == py_vec_shape.to_vec());
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-67 );
+    }
+}
+
+#[test]
+fn test_linear_big_biased_unsym() {
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_inp_unsym_bias_linear.safetensors".to_string()).unwrap();
+    let (lin_w, lin_w_shape) = input(r"C:\study\coursework\src\trash\test_weight_unsym_bias_linear.safetensors".to_string()).unwrap();
+    let (lin_b, lin_b_shape) = input(r"C:\study\coursework\src\trash\test_unsym_bias_linear.safetensors".to_string()).unwrap();
+    let lin = Linear{weigths: lin_w.to_vec(), weights_shape: lin_w_shape.to_vec(), bias : lin_b.to_vec(), bias_shape: lin_b_shape.to_vec(), is_bias: true};
+    let (res_vec, res_vec_shape) = lin.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let _ = output(r"C:\study\coursework\src\trash\test_linear_unsym_bias_rust.safetensors".to_string(), res_vec.clone(), res_vec_shape.clone()).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_linear_unsym_bias_python.safetensors".to_string()).unwrap();
+    assert!(res_vec_shape == py_vec_shape.to_vec());
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-67 );
     }
 }

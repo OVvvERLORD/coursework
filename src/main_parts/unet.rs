@@ -26,7 +26,7 @@ pub struct Unet2dConditionModel {
 }
 
 impl Unet2dConditionModel {
-    pub fn Unet2dConditionModel(
+    pub fn Unet2dConditionModel_constr(
         time_emb : Vec<f32>, time_emb_shape : Vec<usize>, // time
         weigths1: Vec<f32>, weights_shape1 : Vec<usize>, bias1: Vec<f32>, bias_shape1 : Vec<usize>, is_bias1 : bool,
         weigths2 : Vec<f32>, weights_shape2 : Vec<usize>, bias2: Vec<f32>, bias_shape2 : Vec<usize>, is_bias2 : bool,

@@ -5,9 +5,10 @@ use safetensors::{serialize, SafeTensors};
 pub fn Tensor_Mul(args:(Vec<f32>, Vec<usize>, Vec<f32>, Vec<usize>)) ->  Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
     let A = ndarray::Array4::from_shape_vec((args.1[0], args.1[1], args.1[2], args.1[3]), args.0)?;
     let B = ndarray::Array4::from_shape_vec((args.3[0], args.3[1], args.3[2], args.3[3]), args.2)?;
+    let B = B.broadcast([args.1[0], args.1[1], args.3[2], args.3[3]]).unwrap();
     let mut result_shape = args.1;
-    result_shape[3] = result_shape[2];
-    let mut result = ndarray::Array4::<f32>::zeros((result_shape[0], result_shape[1], result_shape[2], result_shape[2]));
+    result_shape[3] = args.3[2];
+    let mut result = ndarray::Array4::<f32>::zeros((result_shape[0], result_shape[1], result_shape[2], result_shape[3]));
     for ((mut res, a_batch), b_batch) in result
         .axis_iter_mut(ndarray::Axis(0))
         .zip(A.axis_iter(ndarray::Axis(0)))

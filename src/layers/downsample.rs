@@ -1,9 +1,7 @@
-use crate::{
-    layers::{
+use crate::layers::{
         layer::Layer,
         conv::Conv2d
-    }
-};
+        };
 
 pub struct DownSample2D {
     pub operations : Vec<Box<dyn Layer>>,

@@ -38,8 +38,5 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_inp.safetensors".to_string())?;
-    print!("{:?}\n\n\n{:?}", test_vec_shape, test_vec);
-    let _ = output(r"C:\study\coursework\src\trash\test_inp_rust.safetensors".to_string(), test_vec.to_vec(), test_vec_shape.to_vec());
     Ok(())
 }
