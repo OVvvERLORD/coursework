@@ -100,13 +100,22 @@ torch.manual_seed(52)
 # print(torch.allclose(tensors, m, 1e-67))
 # save_file({"lin_w" : m}, r"C:\study\coursework\src\trash\test_linear_unsym_python.safetensors")
 ##unsym and biased
-lin = torch.nn.Linear(in_features=128, out_features=64, bias=True)
-test_input = torch.rand(3,3,128,128)
-save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_inp_unsym_bias_linear.safetensors")
-save_file({"lin_w" : lin.weight}, r"C:\study\coursework\src\trash\test_weight_unsym_bias_linear.safetensors")
-save_file({"lin_w" : lin.bias}, r"C:\study\coursework\src\trash\test_unsym_bias_linear.safetensors")
-m = lin(test_input)
-tensors = load_file(r"C:\study\coursework\src\trash\test_linear_unsym_bias_rust.safetensors")['output_tensor']
-delta = m - tensors
-print(torch.allclose(tensors, m, 1e-67))
-save_file({"lin_w" : m}, r"C:\study\coursework\src\trash\test_linear_unsym_bias_python.safetensors")
+# lin = torch.nn.Linear(in_features=128, out_features=64, bias=True)
+# test_input = torch.rand(3,3,128,128)
+# save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_inp_unsym_bias_linear.safetensors")
+# save_file({"lin_w" : lin.weight}, r"C:\study\coursework\src\trash\test_weight_unsym_bias_linear.safetensors")
+# save_file({"lin_w" : lin.bias}, r"C:\study\coursework\src\trash\test_unsym_bias_linear.safetensors")
+# m = lin(test_input)
+# tensors = load_file(r"C:\study\coursework\src\trash\test_linear_unsym_bias_rust.safetensors")['output_tensor']
+# delta = m - tensors
+# print(torch.allclose(tensors, m, 1e-67))
+# save_file({"lin_w" : m}, r"C:\study\coursework\src\trash\test_linear_unsym_bias_python.safetensors")
+
+##conv testings
+conv = torch.nn.Conv2d(640, 320, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0))
+conv.bias = None
+print(conv.weight.shape)
+test_input = torch.rand(4, 640, 128, 128)
+save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp.safetensors")
+save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight.safetensors")
+print(conv(test_input), conv(test_input).shape)
