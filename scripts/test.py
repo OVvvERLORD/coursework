@@ -112,10 +112,68 @@ torch.manual_seed(52)
 # save_file({"lin_w" : m}, r"C:\study\coursework\src\trash\test_linear_unsym_bias_python.safetensors")
 
 ##conv testings
-conv = torch.nn.Conv2d(640, 320, kernel_size=(1, 1), stride=(1, 1), padding=(0, 0))
+## standart conv without bias
+# conv = torch.nn.Conv2d(1280, 1280, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+# conv.bias = None
+# print(conv.weight.shape)
+# test_input = torch.rand(10, 1280, 32, 32)
+# res = conv(test_input)
+# save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp_std.safetensors")
+# save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight_std.safetensors")
+# save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_std_python.safetensors")
+# print(res, res.shape)
+## out_channels < in_channels
+# conv = torch.nn.Conv2d(640, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+# conv.bias = None
+# print(conv.weight.shape)
+# test_input = torch.rand(10, 640, 32, 32)
+# res = conv(test_input)
+# save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp_out.safetensors")
+# save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight_out.safetensors")
+# save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_out_python.safetensors")
+# print(res, res.shape)
+## in_channels < out_channels
+# conv = torch.nn.Conv2d(4, 320, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+# conv.bias = None
+# print(conv.weight.shape)
+# test_input = torch.rand(10, 4, 128, 128)
+# res = conv(test_input)
+# save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp_in.safetensors")
+# save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight_in.safetensors")
+# save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_in_python.safetensors")
+# print(res, res.shape)
+## stride = 2
+# conv = torch.nn.Conv2d(320, 320, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+# conv.bias = None
+# print(conv.weight.shape)
+# test_input = torch.rand(4, 320, 128, 128)
+# res = conv(test_input)
+# save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp_stride.safetensors")
+# save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight_stride.safetensors")
+# save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_stride_python.safetensors")
+# print(res, res.shape)
+##kernel and in < out
+# conv = torch.nn.Conv2d(640, 1280, kernel_size=(1, 1), stride=(1, 1))
+# conv.bias = None
+# print(conv.weight.shape)
+# test_input = torch.rand(4, 640, 64, 64)
+# res = conv(test_input)
+# save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp_kernel_in.safetensors")
+# save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight_kernel_in.safetensors")
+# save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_kernel_in_python.safetensors")
+# print(res, res.shape)
+##kernel and out < in
+conv = torch.nn.Conv2d(960, 640, kernel_size=(1, 1), stride=(1, 1))
 conv.bias = None
 print(conv.weight.shape)
-test_input = torch.rand(4, 640, 128, 128)
-save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp.safetensors")
-save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight.safetensors")
-print(conv(test_input), conv(test_input).shape)
+test_input = torch.rand(4, 960, 64, 64)
+res = conv(test_input)
+save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp_kernel_out.safetensors")
+save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight_kernel_out.safetensors")
+save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_kernel_out_python.safetensors")
+print(res, res.shape)
+
+# import diffusers
+# import torch
+# # test = diffusers.UNet2DConditionModel.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="unet")
+
