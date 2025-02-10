@@ -89,7 +89,7 @@ impl Layer for Attention {
             }
         }
         let (qktv_vec, qktv_shape) = Tensor_Mul((qkt_vec.to_vec(), qkt_shape.to_vec(), v_vec.to_vec(), v_vec_shape.to_vec()))?;
-        let (res_vec, res_shape ) = &self.operations[3].operation((qktv_vec, qkt_shape))?;
+        let (res_vec, res_shape ) = &self.operations[3].operation((qktv_vec, qktv_shape))?;
         Ok((res_vec.to_vec(), res_shape.to_vec()))
     }
 }
@@ -173,3 +173,23 @@ impl Layer for CrossAttnDownBlock2D {
         Ok((res_vec, res_vec_shape))
     }
 }
+
+// #[test]
+// fn test_attention_bse() {
+//     let (weigths_1, weights_shape_1) = input(r"C:\study\coursework\src\trash\attn1_q_lin.safetensors".to_string()).unwrap();
+//     let (weigths_2, weights_shape_2) = input(r"C:\study\coursework\src\trash\attn1_k_lin.safetensors".to_string()).unwrap();
+//     let (weigths_3, weights_shape_3) = input(r"C:\study\coursework\src\trash\attn1_v_lin.safetensors".to_string()).unwrap();
+//     let (weigths_4 , weights_shape_4)  = input(r"C:\study\coursework\src\trash\attn1_out_lin.safetensors".to_string()).unwrap();
+//     let (bias_4 , bias_shape_4)  = input(r"C:\study\coursework\src\trash\attn1_out_lin_bias.safetensors".to_string()).unwrap();
+//     let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\attn1_input.safetensors".to_string()).unwrap();
+//     let attn1 = Attention::Attention_constr(
+//         weigths_1.to_vec(), weights_shape_1.to_vec(), weigths_1.to_vec(), weights_shape_1.to_vec(), false, 
+//         weigths_2.to_vec(), weights_shape_2.to_vec(), weigths_2.to_vec(), weights_shape_2.to_vec(), false, 
+//         weigths_3.to_vec(), weights_shape_3.to_vec(), weigths_3.to_vec(), weights_shape_3.to_vec(), false, 
+//         weigths_4.to_vec(), weights_shape_4.to_vec(), bias_4.to_vec(), bias_shape_4.to_vec(), true);
+//     let mut test_vec_shape = test_vec_shape.to_vec();
+//     test_vec_shape.insert(0, 1);
+//     print!("{:?}", test_vec_shape);
+//     let (res_vec, res_vec_shape) = attn1.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+//     print!("{:?}", res_vec);
+// }
