@@ -23,13 +23,14 @@ impl Up_blocks {
         params_for_resnet1 : Resnet2d_params,
         params_for_resnet2 : Resnet2d_params,
         params_for_resnet3 : Resnet2d_params,
+        hidden_states : Box<Vec::<(Vec<f32>, Vec<usize>)>>
     ) -> Self {
         let mut vec = Vec::<Box<dyn Layer>>::new();
         let crossAttnUpBlock1 = CrossAttnUpBlock2D::CrossAttnUpBlock2D_constr(params_for_crossblock1);
         vec.push(Box::new(crossAttnUpBlock1));
         let crossAttnUpBlock2 = CrossAttnUpBlock2D::CrossAttnUpBlock2D_constr(params_for_crossblock2);
         vec.push(Box::new(crossAttnUpBlock2));
-        let upblock2d = UpBlock2d::UpBlock2d_constr(params_for_resnet1, params_for_resnet2, params_for_resnet3);
+        let upblock2d = UpBlock2d::UpBlock2d_constr(params_for_resnet1, params_for_resnet2, params_for_resnet3, hidden_states);
         vec.push(Box::new(upblock2d));
         Self { operations: vec }
     }

@@ -3,10 +3,9 @@ use crate::{
         layer::Layer,
         conv::Conv2d
     },
-    func::functions::nearest_neighbour_interpolation
+    func::functions::{nearest_neighbour_interpolation, input}
 };
 
-use crate::func::functions::input;
 pub struct Upsample2D {
     pub operations: Vec<Box<dyn Layer>>,
 }

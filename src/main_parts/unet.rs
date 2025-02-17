@@ -44,6 +44,7 @@ impl Unet2dConditionModel {
         params_for_resnet1_up : Resnet2d_params,
         params_for_resnet2_up : Resnet2d_params,
         params_for_resnet3_up : Resnet2d_params,
+        hidden_states : Box<Vec::<(Vec<f32>, Vec<usize>)>>,
 
         params_for_transformer2d :Transformer2D_params, // mid
         params_for_resnet_1_mid: Resnet2d_params,
@@ -60,7 +61,7 @@ impl Unet2dConditionModel {
         vec.push(Box::new(down));
         let mid = mid_block::mid_block_constr(params_for_transformer2d, params_for_resnet_1_mid, params_for_resnet_2_mid);
         vec.push(Box::new(mid));
-        let up = Up_blocks::Up_block_constr(params_for_crossblock1, params_for_crossblock2, params_for_resnet1_up, params_for_resnet2_up, params_for_resnet3_up);
+        let up = Up_blocks::Up_block_constr(params_for_crossblock1, params_for_crossblock2, params_for_resnet1_up, params_for_resnet2_up, params_for_resnet3_up, hidden_states);
         vec.push(Box::new(up));
         vec.push(Box::new(GroupNorm{number_of_groups : number_of_groups_out, eps : eps_out, gamma : gamma_out, beta: beta_out}));
         vec.push(Box::new(SiLU));

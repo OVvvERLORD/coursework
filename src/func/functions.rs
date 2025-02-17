@@ -31,14 +31,18 @@ pub fn Tensor_Mul(args:(Vec<f32>, Vec<usize>, Vec<f32>, Vec<usize>)) ->  Result<
 pub fn input(input_name: String) -> Result<(Arc<Vec<f32>>, Arc<Vec<usize>>), Box<dyn std::error::Error>> { 
     let mut file = File::open(input_name.to_string())?;
     let mut buffer = Vec::<u8>::new();
-    file.read_to_end(&mut buffer);
+    let _ = file.read_to_end(&mut buffer);
 
     let tensors = SafeTensors::deserialize(&buffer)?;
     let mut input_vec = Vec::<f32>::new();
     let mut input_vec_shape = Vec::<usize>::new();
-    for (name, tensor) in tensors.tensors() {
+    for (_, tensor) in tensors.tensors() {
         input_vec = bytemuck::cast_slice(tensor.data()).to_vec();
         input_vec_shape = tensor.shape().to_vec();
+    }
+    if input_vec_shape.len() == 2 {
+        input_vec_shape.insert(0, 1);
+        input_vec_shape.insert(0, 1);
     }
 
     let input_vec: Arc<Vec<f32>> = Arc::from(input_vec);

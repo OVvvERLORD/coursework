@@ -38,14 +38,5 @@ use crate::{
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_conv_inp.safetensors".to_string()).unwrap();
-    print!("{:?}", test_vec_shape);
-    let (weight_vec, weight_vec_shape) = input(r"C:\study\coursework\src\trash\test_conv_weight.safetensors".to_string()).unwrap();
-    let conv = Conv2d {kernel_size: 1, in_channels: 640, out_channels: 320, padding: 0, stride: 1, kernel_weights: weight_vec.to_vec()};
-    let (res_vec, res_vec_shape) = conv.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
-    for i in 0..128{
-        print!("{:?} ", res_vec[i]);
-    }
-    print!("\n{:?}", res_vec_shape);
     Ok(())
 }

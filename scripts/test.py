@@ -178,17 +178,24 @@ import torch
 from safetensors.torch import save_file, load_file
 torch.manual_seed(52)
 unet = diffusers.UNet2DConditionModel.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="unet")
+print(unet)
 test_image = torch.rand(2, 320, 320, 320)
 temb = torch.rand(2, 1280)
-save_file({"test_image": test_image}, r"C:\study\coursework\src\trash\test_resnet_test_image.safetensors")
-save_file({"test_image": temb}, r"C:\study\coursework\src\trash\test_resnet_temb.safetensors")
+# save_file({"test_image": test_image}, r"C:\study\coursework\src\trash\test_resnet_test_image.safetensors")
+# save_file({"test_image": temb}, r"C:\study\coursework\src\trash\test_resnet_temb.safetensors")
 resnet_list = []
 upsample2d_list = []
+downsample2d_list = []
 for i, down_block in enumerate(unet.down_blocks):
     # print(f"Down Block {i}:")
     for j, resnet in enumerate(down_block.resnets):
         # print(f"  ResNet Layer {j}: {resnet}")
         resnet_list.append(resnet)
+    for k, down_block_deeper in enumerate(down_block.named_children()):
+
+        if down_block_deeper[0] == 'downsamplers':
+            for r, downsample2d in enumerate(down_block_deeper[1].named_children()):
+                downsample2d_list.append(downsample2d[1])
 for i, up_block in enumerate(unet.up_blocks):
     for j, resnet in enumerate(up_block.resnets):
         resnet_list.append(resnet)
@@ -197,10 +204,81 @@ for i, up_block in enumerate(unet.up_blocks):
             for k, smth in enumerate(block[1].named_children()):
                 upsample2d_list.append(smth[1])
                 upsample2d = smth[1]
+    if i == 2:
+        upblock2d = up_block
+    # print(up_block)
 for resnet in unet.mid_block.resnets:
      resnet_list.append(resnet)
+#upblock testings
+# upblock2d_resnet_list = []
+# for i, resnet in enumerate(upblock2d.resnets):
+#     upblock2d_resnet_list.append(resnet)
+# res_hidden = torch.rand(2, 320, 128, 128)
+# upblock2d_test = torch.rand(2, 640, 128, 128)
+# temb = torch.rand(2, 1280)
+# save_file({"temb" : temb}, r"C:\study\coursework\src\trash\test_upblock2d_temb.safetensors")
+# save_file({"rhidden" : res_hidden}, r"C:\study\coursework\src\trash\test_upblock2d_res_hidden.safetensors")
+# save_file({"test" : upblock2d_test}, r"C:\study\coursework\src\trash\test_upblock2d_test.safetensors")
 
-print(dir(upsample2d_list[0]))
+# resnet_1 = upblock2d_resnet_list[0]
+# resnet_1.norm1.weight = None
+# resnet_1.norm2.weight = None
+# resnet_1.norm1.bias = None
+# resnet_1.norm2.bias = None
+# resnet_1.conv1.bias = None
+# resnet_1.conv2.bias = None
+# resnet_1.conv_shortcut.bias = None
+# save_file({"conv1_weight" : resnet_1.conv1.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res1_conv1_weight.safetensors")
+# save_file({"conv2_weight" : resnet_1.conv2.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res1_conv2_weight.safetensors")
+# save_file({"linear_proj" : resnet_1.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res1_linear_weight.safetensors")
+# save_file({"linear_proj" : resnet_1.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_upblock2d_res1_linear_bias.safetensors")
+# save_file({"conv_short_weight" : resnet_1.conv_shortcut.weight},   r"C:\study\coursework\src\trash\test_upblock2d_res1_conv_short_weight.safetensors")
+
+# resnet_2 = upblock2d_resnet_list[1]
+# resnet_2.norm1.weight = None
+# resnet_2.norm2.weight = None
+# resnet_2.norm1.bias = None
+# resnet_2.norm2.bias = None
+# resnet_2.conv1.bias = None
+# resnet_2.conv2.bias = None
+# resnet_2.conv_shortcut.bias = None
+# save_file({"conv1_weight" : resnet_2.conv1.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res2_conv1_weight.safetensors")
+# save_file({"conv2_weight" : resnet_2.conv2.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res2_conv2_weight.safetensors")
+# save_file({"linear_proj" : resnet_2.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res2_linear_weight.safetensors")
+# save_file({"linear_proj" : resnet_2.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_upblock2d_res2_linear_bias.safetensors")
+# save_file({"conv_short_weight" : resnet_2.conv_shortcut.weight},   r"C:\study\coursework\src\trash\test_upblock2d_res2_conv_short_weight.safetensors")
+
+
+# resnet_3 = upblock2d_resnet_list[2]
+# resnet_3.norm1.weight = None
+# resnet_3.norm2.weight = None
+# resnet_3.norm1.bias = None
+# resnet_3.norm2.bias = None
+# resnet_3.conv1.bias = None
+# resnet_3.conv2.bias = None
+# resnet_3.conv_shortcut.bias = None
+# save_file({"conv1_weight" : resnet_3.conv1.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res3_conv1_weight.safetensors")
+# save_file({"conv2_weight" : resnet_3.conv2.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res3_conv2_weight.safetensors")
+# save_file({"linear_proj" : resnet_3.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_upblock2d_res3_linear_weight.safetensors")
+# save_file({"linear_proj" : resnet_3.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_upblock2d_res3_linear_bias.safetensors")
+# save_file({"conv_short_weight" : resnet_3.conv_shortcut.weight},   r"C:\study\coursework\src\trash\test_upblock2d_res3_conv_short_weight.safetensors")
+
+
+# res_hidden_states_tuple = (res_hidden, res_hidden, res_hidden)
+# temb = torch.rand(2, 1280)
+# save_file({"temb" : temb}, r"C:\study\coursework\src\trash\test_upblock2d_temb.safetensors")
+# save_file({"upblock2d_out": upblock2d(upblock2d_test, res_hidden_states_tuple, temb = temb)}, r"C:\study\coursework\src\trash\test_upblock2d_out.safetensors")
+
+
+
+## downsample2d testings
+## they share common input 
+# test_upsample = torch.rand(2, 640, 128, 128)
+# downsample2d_test = downsample2d_list[1]
+# downsample2d_test.conv.bias = None
+# save_file({"downsample2d_conv" : downsample2d_test.conv.weight}, r"C:\study\coursework\src\trash\test_downsample_conv.safetensors")
+# save_file({"downsample_out": downsample2d_test(test_upsample)}, r"C:\study\coursework\src\trash\test_downsample_outp.safetensors")
+
 #upsample test
 # test_upsample = torch.rand(2, 640, 128, 128)
 # upsample2d.conv.bias = None
@@ -286,25 +364,25 @@ print(dir(upsample2d_list[0]))
 # print(testings2(test_image, temb))
 
 
-for i, block in enumerate(unet.mid_block.attentions.named_children()):
-    for j, transformer_block in enumerate(block[1].named_children()): # block = transformer2dmodel
-        if transformer_block[0] == 'transformer_blocks':
-            for k, block_basic in enumerate(transformer_block[1].named_children()): # block = basictransformerblock
-                if block_basic[0] == '0':
-                    for k, block_inside_basic in enumerate(block_basic[1].named_children()): # block_inside_basic = layers in bastictransformerblock
-                        if block_inside_basic[0] == 'ff':
-                            ff = block_inside_basic[1]
-                        if block_inside_basic[0] == "attn1":
-                            attn1 = block_inside_basic[1]
+# for i, block in enumerate(unet.mid_block.attentions.named_children()):
+#     for j, transformer_block in enumerate(block[1].named_children()): # block = transformer2dmodel
+#         if transformer_block[0] == 'transformer_blocks':
+#             for k, block_basic in enumerate(transformer_block[1].named_children()): # block = basictransformerblock
+#                 if block_basic[0] == '0':
+#                     for k, block_inside_basic in enumerate(block_basic[1].named_children()): # block_inside_basic = layers in bastictransformerblock
+#                         if block_inside_basic[0] == 'ff':
+#                             ff = block_inside_basic[1]
+#                         if block_inside_basic[0] == "attn1":
+#                             attn1 = block_inside_basic[1]
 
-for i, net in enumerate(ff.named_children()):
+# for i, net in enumerate(ff.named_children()):
 
-    for j, layer in enumerate(net[1].named_children()):
-        if layer[0] == '0':
-                geglu = layer[1]
-                lin1 = layer[1].proj
-        if layer[0] == '2':
-            lin2 = layer[1]
+#     for j, layer in enumerate(net[1].named_children()):
+#         if layer[0] == '0':
+#                 geglu = layer[1]
+#                 lin1 = layer[1].proj
+#         if layer[0] == '2':
+#             lin2 = layer[1]
 
 ## ff test
 # test_ff = torch.rand(2, 2, 1280, 1280)

@@ -80,8 +80,8 @@ fn test_resnet_no_shortcut_no_bias() {
     let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_resnet_test_image.safetensors".to_string()).unwrap();
     let (temb_vec, temb_vec_shape) = input(r"C:\study\coursework\src\trash\test_resnet_temb.safetensors".to_string()).unwrap();
     let mut temb_vec_shape = temb_vec_shape.to_vec();
-    temb_vec_shape.insert(0, 1);
-    temb_vec_shape.insert(0, 1);
+    // temb_vec_shape.insert(0, 1);
+    // temb_vec_shape.insert(0, 1);
     let params = Resnet2d_params{
         number_of_groups_1: 32, eps_1: 1e-05, gamma_1: 1., beta_1: 0.,
         in_channels_1: 320, out_channels_1: 320, padding_1: 1, stride_1 : 1, kernel_size_1 : 3, kernel_weights_1: conv1_vec.to_vec(), 
@@ -111,8 +111,8 @@ fn test_resnet_shortcut_no_bias() {
     let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_resnet_test_image.safetensors".to_string()).unwrap();
     let (temb_vec, temb_vec_shape) = input(r"C:\study\coursework\src\trash\test_resnet_temb.safetensors".to_string()).unwrap();
     let mut temb_vec_shape = temb_vec_shape.to_vec();
-    temb_vec_shape.insert(0, 1);
-    temb_vec_shape.insert(0, 1);
+    // temb_vec_shape.insert(0, 1);
+    // temb_vec_shape.insert(0, 1);
     let params = Resnet2d_params{
         number_of_groups_1: 32, eps_1: 1e-05, gamma_1: 1., beta_1: 0.,
         in_channels_1: 320, out_channels_1: 640, padding_1: 1, stride_1 : 1, kernel_size_1 : 3, kernel_weights_1: conv1_vec.to_vec(), 
