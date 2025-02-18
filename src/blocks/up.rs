@@ -12,6 +12,9 @@ use crate::{
     }
 };
 
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub struct Up_blocks {
     pub operations : Vec<Box<dyn Layer>>,
 }
@@ -23,7 +26,7 @@ impl Up_blocks {
         params_for_resnet1 : Resnet2d_params,
         params_for_resnet2 : Resnet2d_params,
         params_for_resnet3 : Resnet2d_params,
-        hidden_states : Box<Vec::<(Vec<f32>, Vec<usize>)>>
+        hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>
     ) -> Self {
         let mut vec = Vec::<Box<dyn Layer>>::new();
         let crossAttnUpBlock1 = CrossAttnUpBlock2D::CrossAttnUpBlock2D_constr(params_for_crossblock1);

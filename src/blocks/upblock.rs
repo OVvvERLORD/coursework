@@ -7,9 +7,12 @@ use crate::{
     func::functions::input
 };
 
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub struct UpBlock2d {
     pub operations : Vec<Box<dyn Layer>>,
-    pub res_hidden_tensors: Box<Vec<(Vec<f32>, Vec<usize>)>>
+    pub res_hidden_tensors: Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>,
 }
 
 impl UpBlock2d {
@@ -17,7 +20,7 @@ impl UpBlock2d {
         params_for_resnet1 : Resnet2d_params,
         params_for_resnet2 : Resnet2d_params,
         params_for_resnet3 : Resnet2d_params,
-        hidden_states : Box<Vec::<(Vec<f32>, Vec<usize>)>>
+        hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>
     ) -> Self {
         let mut vec = Vec::<Box<dyn Layer>>::new();
         let resnet1 = Resnet2d::Resnet2d_constr(params_for_resnet1);
@@ -33,7 +36,7 @@ impl UpBlock2d {
 impl Layer for UpBlock2d {
     fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
         let operations = &self.operations;
-        let hidden_tensors = &self.res_hidden_tensors;
+        let hidden_tensors = &self.res_hidden_tensors.borrow_mut();
         let mut res_vec = args.0;
         let mut res_vec_shape = args.1;
         let mut idx = 0;
@@ -64,7 +67,7 @@ fn test_unbiased () {
     hidden_vec.push((hidden_ins_vec.to_vec(), hidden_vec_shape.to_vec()));
     hidden_vec.push((hidden_ins_vec.to_vec(), hidden_vec_shape.to_vec()));
     hidden_vec.push((hidden_ins_vec.to_vec(), hidden_vec_shape.to_vec()));
-    let hidden_vec = Box::new(hidden_vec);
+    let hidden_vec = Rc::new(RefCell::new(hidden_vec));
     let (conv1_res1_vec, _) = input(r"C:\study\coursework\src\trash\test_upblock2d_res1_conv1_weight.safetensors".to_string()).unwrap();
     let (conv2_res1_vec, _ ) = input(r"C:\study\coursework\src\trash\test_upblock2d_res1_conv2_weight.safetensors".to_string()).unwrap();
     let (lin_res1_vec, lin_res1_vec_shape) = input(r"C:\study\coursework\src\trash\test_upblock2d_res1_linear_weight.safetensors".to_string()).unwrap();
@@ -112,7 +115,7 @@ fn test_unbiased () {
         is_shortcut: true,
         in_channels_short: 640, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: conv_short_res3_vec.to_vec()
     };
-    
+
     let upblock = UpBlock2d::UpBlock2d_constr(res1_params, res2_params, res3_params, hidden_vec);
     let (res_vec, res_vec_shape) = upblock.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
     let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_upblock2d_out.safetensors".to_string()).unwrap();

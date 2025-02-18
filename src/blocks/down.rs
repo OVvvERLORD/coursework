@@ -12,6 +12,8 @@ use crate::{
         attn::CrossAttnDownBlock2D
     }
 };
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct Down_blocks {
     pub operations : Vec<Box<dyn Layer>>,
@@ -24,9 +26,10 @@ impl Down_blocks {
         in_channels : usize, out_channels : usize, padding : i32, stride : i32, kernel_size : usize, kernel_weights : Vec<f32>,
         params_for_crattbl1 : CrossAttnDownBlock2D_params,
         params_for_crattbl2 : CrossAttnDownBlock2D_params,
+        hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>
     ) -> Self {
         let mut vec = Vec::<Box<dyn Layer>>::new();
-        let downblock = DownBlock2D::DownBlock2D_constr(params_for_resnet1, params_for_resnet2, in_channels, out_channels, padding, stride, kernel_size, kernel_weights);
+        let downblock = DownBlock2D::DownBlock2D_constr(params_for_resnet1, params_for_resnet2, in_channels, out_channels, padding, stride, kernel_size, kernel_weights, hidden_states);
         vec.push(Box::new(downblock));
         let crossattnblock1 = CrossAttnDownBlock2D::CrossAttnDownBlock2D_constr(params_for_crattbl1);
         vec.push(Box::new(crossattnblock1));

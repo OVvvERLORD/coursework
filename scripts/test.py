@@ -178,7 +178,7 @@ import torch
 from safetensors.torch import save_file, load_file
 torch.manual_seed(52)
 unet = diffusers.UNet2DConditionModel.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", subfolder="unet")
-print(unet)
+# print(unet)
 test_image = torch.rand(2, 320, 320, 320)
 temb = torch.rand(2, 1280)
 # save_file({"test_image": test_image}, r"C:\study\coursework\src\trash\test_resnet_test_image.safetensors")
@@ -196,6 +196,9 @@ for i, down_block in enumerate(unet.down_blocks):
         if down_block_deeper[0] == 'downsamplers':
             for r, downsample2d in enumerate(down_block_deeper[1].named_children()):
                 downsample2d_list.append(downsample2d[1])
+    if i == 0:
+        downblock2d = down_block
+        # print(down_block)
 for i, up_block in enumerate(unet.up_blocks):
     for j, resnet in enumerate(up_block.resnets):
         resnet_list.append(resnet)
@@ -209,7 +212,81 @@ for i, up_block in enumerate(unet.up_blocks):
     # print(up_block)
 for resnet in unet.mid_block.resnets:
      resnet_list.append(resnet)
-#upblock testings
+
+
+
+## downblock testings
+downblock2d_resnet_list = []
+for i, resnet in enumerate(downblock2d.resnets):
+    downblock2d_resnet_list.append(resnet)
+for j, block in enumerate(downblock2d.named_children()):
+    if j == 1:
+        downsample = block[1]
+
+
+# print(downblock2d_resnet_list)
+
+
+temb = torch.rand(2, 1280)
+save_file({"temb" : temb}, r"C:\study\coursework\src\trash\test_downblock2d_temb.safetensors")
+downblock2d_test = torch.rand(2, 320, 128, 128)
+save_file({"test" : downblock2d_test}, r"C:\study\coursework\src\trash\test_downblock2d_test.safetensors")
+
+
+
+resnet_1 = downblock2d_resnet_list[0]
+resnet_1.norm1.affine = False
+resnet_1.norm1.weight = None
+resnet_1.norm2.weight = None
+resnet_1.norm1.bias = None
+resnet_1.norm2.bias = None
+resnet_1.norm2.affine = False
+resnet_1.conv1.bias = None
+resnet_1.conv2.bias = None
+save_file({"conv1_weight" : resnet_1.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_weight.safetensors")
+save_file({"conv2_weight" : resnet_1.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_weight.safetensors")
+save_file({"linear_proj" : resnet_1.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_weight.safetensors")
+save_file({"linear_proj" : resnet_1.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_bias.safetensors")
+
+resnet_2 = downblock2d_resnet_list[1]
+resnet_2.norm1.affine = False
+resnet_2.norm1.weight = None
+resnet_2.norm2.weight = None
+resnet_2.norm1.bias = None
+resnet_2.norm2.bias = None
+resnet_2.norm2.affine = False
+resnet_2.conv1.bias = None
+resnet_2.conv2.bias = None
+save_file({"conv1_weight" : resnet_2.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_weight.safetensors")
+save_file({"conv2_weight" : resnet_2.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_weight.safetensors")
+save_file({"linear_proj" : resnet_2.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_weight.safetensors")
+save_file({"linear_proj" : resnet_2.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_bias.safetensors")
+
+for i, block in enumerate(downsample.named_children()):
+    conv_downsample = block[1]
+conv_downsample.conv.bias = None
+save_file({"conv_down_weight": conv_downsample.conv.weight}, r"C:\study\coursework\src\trash\test_downblock2d_downsample.safetensors")
+output = downblock2d(downblock2d_test, temb = temb)
+save_file({"downsample2d_out": output[0]}, r"C:\study\coursework\src\trash\test_downsample2d_output.safetensors")
+
+save_file({"downsample2d_out_hidden" : output[1][0]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden1.safetensors")
+save_file({"downsample2d_out_hidden" : output[1][1]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden2.safetensors")
+save_file({"downsample2d_out_hidden" : output[1][2]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden3.safetensors")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## upblock testings
 # upblock2d_resnet_list = []
 # for i, resnet in enumerate(upblock2d.resnets):
 #     upblock2d_resnet_list.append(resnet)
