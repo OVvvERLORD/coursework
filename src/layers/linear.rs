@@ -12,27 +12,14 @@ pub struct Linear{
 }
 
 impl Layer for Linear {
-    // fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
-    //     let weight = self.weigths.clone();
-    //     let bias = self.bias.clone();
-    //     let input_matr = ndarray::Array2::from_shape_vec((args.1[0] * args.1[1] *args.1[2], args.1[3]), args.0.clone())?.to_owned();
-    //     let weight_matr = ndarray::Array2::from_shape_vec((self.weights_shape[0],self.weights_shape[1]), weight)?.to_owned();
-    //     let tr_weight_matr = weight_matr.t().to_owned();
-    //     let mut res = input_matr.dot(&tr_weight_matr);
-    //     if self.is_bias {
-            // let bias_matr = ndarray::Array1::from_shape_vec(self.bias_shape[0], bias)?;
-            // res = res.clone() + bias_matr.broadcast(res.dim()).unwrap();
-    //     }
-    //     let test = res.shape().to_vec();
-    //     let vec_res = res.into_raw_vec_and_offset().0;
-    //     print!("{:?}", vec_res);
-    //     Ok((vec_res, test))
-    // }
     fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
         let weights = self.weigths.clone();
         let mut weights_shape = self.weights_shape.clone();
         let input = args.0;
-        let input_shape = args.1;
+        let mut input_shape = args.1;
+        if input_shape.len() == 3 {
+            input_shape.insert(0, 1);
+        }
         if weights_shape.len() != 4 {
             weights_shape.insert(0, 1);
             weights_shape.insert(0, 1);

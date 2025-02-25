@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub struct Transformer2D_params {
     pub number_of_groups: usize, pub eps: f32, pub gamma: f32, pub beta: f32,
     pub weigths_in: Vec<f32>, pub weights_shape_in: Vec<usize>, pub bias_in: Vec<f32>, pub bias_shape_in : Vec<usize>, pub is_bias_in : bool,
@@ -13,12 +16,14 @@ pub struct BasicTransofmerBlock_params {
     pub weigths_2: Vec<f32>, pub weights_shape_2 : Vec<usize>, pub bias_2: Vec<f32>, pub bias_shape_2 : Vec<usize>, pub is_bias_2 : bool,
     pub weigths_3: Vec<f32>, pub weights_shape_3 : Vec<usize>, pub bias_3: Vec<f32>, pub bias_shape_3 : Vec<usize>, pub is_bias_3 : bool,
     pub weigths_4: Vec<f32>, pub weights_shape_4 : Vec<usize>, pub bias_4: Vec<f32>, pub bias_shape_4 : Vec<usize>, pub is_bias_4 : bool,
+    pub encoder_hidden_tensor_1 : Rc<RefCell<(Vec<f32>, Vec<usize>)>>, pub if_encoder_tensor_1 : bool, pub number_of_heads_1: usize, 
 
     pub weigths_5: Vec<f32>, pub weights_shape_5 : Vec<usize>, pub bias_5: Vec<f32>, pub bias_shape_5 : Vec<usize>, pub is_bias_5 : bool, // Attn2
     pub weigths_6: Vec<f32>, pub weights_shape_6 : Vec<usize>, pub bias_6: Vec<f32>, pub bias_shape_6 : Vec<usize>, pub is_bias_6 : bool,
     pub weigths_7: Vec<f32>, pub weights_shape_7 : Vec<usize>, pub bias_7: Vec<f32>, pub bias_shape_7 : Vec<usize>, pub is_bias_7 : bool,
     pub weigths_8: Vec<f32>, pub weights_shape_8 : Vec<usize>, pub bias_8: Vec<f32>, pub bias_shape_8 : Vec<usize>, pub is_bias_8 : bool,
-    
+    pub encoder_hidden_tensor_2 : Rc<RefCell<(Vec<f32>, Vec<usize>)>>, pub if_encoder_tensor_2 : bool, pub number_of_heads_2: usize, 
+
     pub weigths_ff1: Vec<f32>, pub weights_shape_ff1 : Vec<usize>, pub bias_ff1: Vec<f32>, pub bias_shape_ff1 : Vec<usize>, pub is_bias_ff1 : bool, // FeedForward
     pub weigths_ff2: Vec<f32>, pub weights_shape_ff2 : Vec<usize>, pub bias_ff2: Vec<f32>, pub bias_shape_ff2 : Vec<usize>, pub is_bias_ff2 : bool,
 }

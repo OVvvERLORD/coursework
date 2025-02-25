@@ -9,19 +9,33 @@ use crate::{
         ff::FeedForward
     },
 };
+
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub struct BasicTransofmerBlock {
     pub operations: Vec<Box<dyn Layer>>,
 }
+
 impl BasicTransofmerBlock {
     pub fn BasicTransofmerBlock_constr(
         params : &BasicTransofmerBlock_params
     ) -> Self {
         let mut vec: Vec<Box<dyn Layer>> = Vec::new();
         vec.push(Box::new(LayerNorm { eps : params.eps_1.clone(), gamma : params.gamma_1.clone(), beta : params.beta_1.clone(), number : params.number_1.clone()}));
-        let attn1 = Attention::Attention_constr(params.weigths_1.clone(), params.weights_shape_1.clone(), params.bias_1.clone(), params.bias_shape_1.clone(), params.is_bias_1.clone(), params.weigths_2.clone(), params.weights_shape_2.clone(), params.bias_2.clone(), params.bias_shape_2.clone(), params.is_bias_2.clone(), params.weigths_3.clone(), params.weights_shape_3.clone(), params.bias_3.clone(), params.bias_shape_3.clone(), params.is_bias_3.clone(), params.weigths_4.clone(), params.weights_shape_4.clone(), params.bias_4.clone(), params.bias_shape_4.clone(), params.is_bias_4.clone());
+        let attn1 = Attention::Attention_constr(
+            params.weigths_1.clone(), params.weights_shape_1.clone(), params.bias_1.clone(), params.bias_shape_1.clone(), params.is_bias_1.clone(), 
+            params.weigths_2.clone(), params.weights_shape_2.clone(), params.bias_2.clone(), params.bias_shape_2.clone(), params.is_bias_2.clone(), 
+            params.weigths_3.clone(), params.weights_shape_3.clone(), params.bias_3.clone(), params.bias_shape_3.clone(), params.is_bias_3.clone(), 
+            params.weigths_4.clone(), params.weights_shape_4.clone(), params.bias_4.clone(), params.bias_shape_4.clone(), params.is_bias_4.clone(), 
+            Rc::clone(&params.encoder_hidden_tensor_1), params.if_encoder_tensor_1 , params.number_of_heads_1);
         vec.push(Box::new(attn1));
         vec.push(Box::new(LayerNorm { eps :params.eps_2.clone(), gamma : params.gamma_2.clone(), beta : params.beta_2.clone(), number : params.number_2.clone()}));
-        let attn2 = Attention::Attention_constr(params.weigths_5.clone(), params.weights_shape_5.clone(), params.bias_5.clone(), params.bias_shape_5.clone(), params.is_bias_5.clone(), params.weigths_6.clone(), params.weights_shape_6.clone(), params.bias_6.clone(), params.bias_shape_6.clone(), params.is_bias_6.clone(), params.weigths_7.clone(), params.weights_shape_7.clone(), params.bias_7.clone(), params.bias_shape_7.clone(), params.is_bias_7.clone(), params.weigths_8.clone(), params.weights_shape_8.clone(), params.bias_8.clone(), params.bias_shape_8.clone(), params.is_bias_8.clone());
+        let attn2 = Attention::Attention_constr(params.weigths_5.clone(), params.weights_shape_5.clone(), params.bias_5.clone(), params.bias_shape_5.clone(), params.is_bias_5.clone(), 
+        params.weigths_6.clone(), params.weights_shape_6.clone(), params.bias_6.clone(), params.bias_shape_6.clone(), params.is_bias_6.clone(), 
+        params.weigths_7.clone(), params.weights_shape_7.clone(), params.bias_7.clone(), params.bias_shape_7.clone(), params.is_bias_7.clone(), 
+        params.weigths_8.clone(), params.weights_shape_8.clone(), params.bias_8.clone(), params.bias_shape_8.clone(), params.is_bias_8.clone(), 
+        Rc::clone(&params.encoder_hidden_tensor_2), params.if_encoder_tensor_2 , params.number_of_heads_2);
         vec.push(Box::new(attn2));
         vec.push(Box::new(LayerNorm { eps : params.eps_3.clone(), gamma : params.gamma_3.clone(), beta : params.beta_3.clone(), number : params.number_3.clone()}));
         let ff = FeedForward::FeedForward_constr(params.weigths_ff1.clone(), params.weights_shape_ff1.clone(), params.bias_ff1.clone(), params.bias_shape_ff1.clone(), params.is_bias_ff1.clone(), params.weigths_ff2.clone(), params.weights_shape_ff2.clone(), params.bias_ff2.clone(), params.bias_shape_ff2.clone(), params.is_bias_ff2.clone());

@@ -44,7 +44,9 @@ pub fn input(input_name: String) -> Result<(Arc<Vec<f32>>, Arc<Vec<usize>>), Box
         input_vec_shape.insert(0, 1);
         input_vec_shape.insert(0, 1);
     }
-
+    // if input_vec_shape.len() == 3 {
+    //     input_vec_shape.insert(0, 1);
+    // }
     let input_vec: Arc<Vec<f32>> = Arc::from(input_vec);
     let input_vec_shape: Arc<Vec<usize>> =  Arc::from(input_vec_shape);
 

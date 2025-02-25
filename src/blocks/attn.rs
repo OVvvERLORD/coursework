@@ -1,5 +1,5 @@
 use crate::{
-    func::functions::Tensor_Mul,
+    func::functions::{Tensor_Mul,input},
     layers::{
     layer::Layer,
     linear::Linear,
@@ -16,10 +16,16 @@ use crate::{
     }
 };
 
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use std::f32::consts::E;
 
 pub struct Attention {
     pub operations : Vec<Box<dyn Layer>>,
+    pub encoder_hidden_tensor : Rc<RefCell<(Vec<f32>, Vec<usize>)>>,
+    pub if_encoder_tensor : bool,
+    pub heads : usize
 }
 impl Attention {
     pub fn Attention_constr(
@@ -27,58 +33,100 @@ impl Attention {
         weigths_2: Vec<f32>, weights_shape_2 : Vec<usize>, bias_2: Vec<f32>, bias_shape_2 : Vec<usize>, is_bias_2 : bool,
         weigths_3: Vec<f32>, weights_shape_3 : Vec<usize>, bias_3: Vec<f32>, bias_shape_3 : Vec<usize>, is_bias_3 : bool,
         weigths_4: Vec<f32>, weights_shape_4 : Vec<usize>, bias_4: Vec<f32>, bias_shape_4 : Vec<usize>, is_bias_4 : bool,
+        encoder_hidden_tensor : Rc<RefCell<(Vec<f32>, Vec<usize>)>>,
+        if_encoder_tensor : bool, number_of_heads: usize
     ) -> Self {
         let mut vec : Vec<Box<dyn Layer>> = Vec::new();
         vec.push(Box::new(Linear {weigths : weigths_1, weights_shape : weights_shape_1, bias : bias_1, bias_shape : bias_shape_1, is_bias : is_bias_1}));
         vec.push(Box::new(Linear {weigths : weigths_2, weights_shape : weights_shape_2, bias : bias_2, bias_shape : bias_shape_2, is_bias : is_bias_2}));
         vec.push(Box::new(Linear {weigths : weigths_3, weights_shape : weights_shape_3, bias : bias_3, bias_shape : bias_shape_3, is_bias : is_bias_3}));
         vec.push(Box::new(Linear {weigths : weigths_4, weights_shape : weights_shape_4, bias : bias_4, bias_shape : bias_shape_4, is_bias : is_bias_4}));
-        Self { operations: vec }
+        Self { operations: vec, encoder_hidden_tensor: encoder_hidden_tensor, if_encoder_tensor: if_encoder_tensor, heads: number_of_heads }
     }
 }
 
 impl Layer for Attention {
-    // fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
-        // let norm_vec = args.0;
-        // let norm_vec_shape = args.1;
-        // let (q_vec, q_vec_shape) = &self.operations[0].operation((norm_vec.clone(), norm_vec_shape.clone()))?; 
-        // let (k_vec, k_vec_shape) = &self.operations[1].operation((norm_vec.clone(), norm_vec_shape.clone()))?;
-        // let (v_vec, v_vec_shape) = &self.operations[2].operation((norm_vec.clone(), norm_vec_shape.clone()))?;
-    //     let Q = ndarray::Array2::from_shape_vec((q_vec_shape[0] * q_vec_shape[1] * q_vec_shape[2], q_vec_shape[3]), q_vec.to_vec())?;
-    //     let K = ndarray::Array2::from_shape_vec((k_vec_shape[0] * k_vec_shape[1] * k_vec_shape[2], k_vec_shape[3]), k_vec.to_vec())?;
-    //     let V = ndarray::Array2::from_shape_vec((v_vec_shape[0] * v_vec_shape[1] * v_vec_shape[2], v_vec_shape[3]), v_vec.to_vec())?;
-    //     let mut matmul_q_k = Q.dot(&K.t());
-    //     matmul_q_k = matmul_q_k / (k_vec_shape[3] as f32).sqrt();
-    //     let mmqk_shape_vec = matmul_q_k.shape().to_vec();
-    //     let limit = mmqk_shape_vec[3];
-    //     let mut temp_vec = matmul_q_k.into_raw_vec_and_offset().0;
-        // for i in (0..temp_vec.len()).step_by(limit) {
-        //     let mut sigma = 0_f32;
-        //     for j in 0..limit {
-        //         sigma += E.powf(temp_vec[i + j]);
-        //     }
-        //     for j in 0..limit {
-        //         temp_vec[i + j] = E.powf(temp_vec[i + j]) / sigma; 
-        //     }
-        // }
-    //     let matmul_q_k =  ndarray::Array2::from_shape_vec((mmqk_shape_vec[0] * mmqk_shape_vec[1] * mmqk_shape_vec[2], mmqk_shape_vec[3] ), temp_vec)?;
-    //     let res = matmul_q_k.clone().dot(&V);
-    //     let res_vec = res.into_raw_vec_and_offset().0;
-    //     let mut res_vec_shape = matmul_q_k.clone().shape().to_vec();
-    //     res_vec_shape.insert(0, 1);
-    //     Ok((res_vec, res_vec_shape))
-    // }
     fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
-        let norm_vec = args.0;
+        let norm_vec = args.0; 
         let norm_vec_shape = args.1;
-        let (q_vec, q_vec_shape) = &self.operations[0].operation((norm_vec.clone(), norm_vec_shape.clone()))?; 
-        let (k_vec, k_vec_shape) = &self.operations[1].operation((norm_vec.clone(), norm_vec_shape.clone()))?;
-        let (v_vec, v_vec_shape) = &self.operations[2].operation((norm_vec.clone(), norm_vec_shape.clone()))?;
-        let (mut qkt_vec, qkt_shape) = Tensor_Mul((q_vec.to_vec(), q_vec_shape.to_vec(), k_vec.to_vec(), k_vec_shape.to_vec()))?;
+        let input_tensor = if norm_vec_shape.len() !=3 
+        {ndarray::Array3::from_shape_vec((norm_vec_shape[0],norm_vec_shape[1], norm_vec_shape[2] * norm_vec_shape[3]), norm_vec)?.permuted_axes([0, 2, 1]).as_standard_layout().to_owned()}
+        else 
+        {ndarray::Array3::from_shape_vec((norm_vec_shape[0], norm_vec_shape[1], norm_vec_shape[2]), norm_vec)?.as_standard_layout().to_owned()};
+
+        let for_q_vec = input_tensor.clone().into_raw_vec_and_offset().0;
+        let mut for_q_vec_shape = Vec::<usize>::new();
+        for_q_vec_shape.insert(0, 1);
+        let input_dim = input_tensor.dim();
+        let (batch_size, sequence_length, _ )= if !self.if_encoder_tensor
+        {input_dim}
+        else
+        {(self.encoder_hidden_tensor.borrow().1.clone()[0], self.encoder_hidden_tensor.borrow().1.clone()[1], self.encoder_hidden_tensor.borrow().1.clone()[2])}; 
+        for_q_vec_shape.push(input_dim.0);
+        for_q_vec_shape.push(input_dim.1);
+        for_q_vec_shape.push(input_dim.2);
+        let (q_vec, q_vec_shape) = &self.operations[0].operation((for_q_vec.clone(), for_q_vec_shape.clone()))?; 
+
+        let for_k_vec = if !self.if_encoder_tensor
+        {for_q_vec.clone()}
+        else
+        {self.encoder_hidden_tensor.borrow().0.clone()};
+        let for_k_vec_shape = if !self.if_encoder_tensor
+        {for_q_vec_shape.clone()}
+        else
+        {self.encoder_hidden_tensor.borrow().1.clone()};
+
+        let for_v_vec = if !self.if_encoder_tensor
+        {for_q_vec.clone()}
+        else
+        {self.encoder_hidden_tensor.borrow().0.clone()};
+        let for_v_vec_shape = if !self.if_encoder_tensor
+        {for_q_vec_shape.clone()}
+        else
+        {self.encoder_hidden_tensor.borrow().1.clone()};
+        let (k_vec, k_vec_shape) = &self.operations[1].operation((for_k_vec, for_k_vec_shape))?;
+        let (v_vec, v_vec_shape) = &self.operations[2].operation((for_v_vec, for_v_vec_shape))?;
+
+        let inner_dim = k_vec_shape[3];
+        let head_dim = inner_dim / self.heads;
+
+        let query = ndarray::Array4::from_shape_vec((q_vec_shape[0], q_vec_shape[1], q_vec_shape[2], q_vec_shape[3]), q_vec.to_vec())
+        .unwrap()
+        .into_shape_with_order((batch_size, (q_vec_shape[0] * q_vec_shape[1] * q_vec_shape[2] * q_vec_shape[3]) / (batch_size * self.heads * head_dim), self.heads, head_dim)) // ПРОВЕРИТЬ, ЧТО ИМЕННО 2 !!!!!!!!!!
+        .unwrap().permuted_axes([0, 2, 1, 3])
+        .as_standard_layout()
+        .to_owned();
+        let key = ndarray::Array4::from_shape_vec((k_vec_shape[0], k_vec_shape[1], k_vec_shape[2], k_vec_shape[3]), k_vec.to_vec())
+        .unwrap()
+        .into_shape_with_order((batch_size, (k_vec_shape[0] * k_vec_shape[1] * k_vec_shape[2] * k_vec_shape[3]) / (batch_size * self.heads * head_dim), self.heads, head_dim))
+        .unwrap().permuted_axes([0, 2, 1, 3])
+        .as_standard_layout()
+        .to_owned();
+
+        let value = ndarray::Array4::from_shape_vec((v_vec_shape[0], v_vec_shape[1], v_vec_shape[2], v_vec_shape[3]), v_vec.to_vec())
+        .unwrap()
+        .into_shape_with_order((batch_size, (v_vec_shape[0] * v_vec_shape[1] * v_vec_shape[2] * v_vec_shape[3]) / (batch_size * self.heads * head_dim), self.heads, head_dim))
+        .unwrap().permuted_axes([0, 2, 3, 1]) // be aware, it can be painful
+        .as_standard_layout()
+        .to_owned();
+
+        let scale = 1. / (head_dim as f32).sqrt();
+        let query_dim = query.dim();
+        let key_dim = key.dim();
+        let query_vec = query.into_raw_vec_and_offset().0;
+        let key_vec = key.into_raw_vec_and_offset().0;
+        let (mut qkt_vec, qkt_vec_shape) = 
+        Tensor_Mul((
+                query_vec, 
+                vec![batch_size, self.heads, (query_dim.0 * query_dim.1 * query_dim.2 * query_dim.3) / (batch_size * self.heads * head_dim), head_dim].to_vec(), 
+                key_vec, 
+                vec![batch_size, self.heads, (key_dim.0 * key_dim.1 * key_dim.2 * key_dim.3) / (batch_size * self.heads * head_dim), head_dim].to_vec())).unwrap();
+
+
         for i in 0..qkt_vec.len() {
-            qkt_vec[i] /= (k_vec_shape[3] as f32).sqrt();
+            qkt_vec[i] *= scale;
         }
-        let limit = qkt_shape[3];
+        let limit = qkt_vec_shape[3];
         for i in (0..qkt_vec.len()).step_by(limit) {
             let mut sigma = 0_f32;
             for j in 0..limit {
@@ -88,9 +136,49 @@ impl Layer for Attention {
                 qkt_vec[i + j] = E.powf(qkt_vec[i + j]) / sigma; 
             }
         }
-        let (qktv_vec, qktv_shape) = Tensor_Mul((qkt_vec.to_vec(), qkt_shape.to_vec(), v_vec.to_vec(), v_vec_shape.to_vec()))?;
-        let (res_vec, res_shape ) = &self.operations[3].operation((qktv_vec, qktv_shape))?;
-        Ok((res_vec.to_vec(), res_shape.to_vec()))
+        let value_dim = value.dim();
+        let value_vec = value.into_raw_vec_and_offset().0;
+
+        let (processor_vec, processor_vec_shape) = Tensor_Mul(
+            (
+                qkt_vec, 
+                qkt_vec_shape,
+                value_vec, 
+                vec![batch_size,  self.heads, head_dim, (value_dim.0 * value_dim.1 * value_dim.2 * value_dim.3) / (batch_size * self.heads * head_dim)].to_vec()
+            )
+        ).unwrap();
+
+        let processor_tensor = ndarray::Array4::from_shape_vec(
+            (processor_vec_shape[0], processor_vec_shape[1], processor_vec_shape[2], processor_vec_shape[3]),
+            processor_vec
+        )
+        .unwrap()
+        .permuted_axes([0, 2, 1, 3])
+        .as_standard_layout()
+        .into_shape_with_order((batch_size, (processor_vec_shape[0] * processor_vec_shape[1] * processor_vec_shape[2] * processor_vec_shape[3]) / (batch_size * self.heads * head_dim), self.heads * head_dim)) // zdec' tozhe her'
+        .unwrap()
+        .as_standard_layout()
+        .to_owned();
+
+        let out_vec_dim = processor_tensor.dim();   
+        let out_vec_shape = vec![1, out_vec_dim.0, out_vec_dim.1, out_vec_dim.2].to_vec();
+        let out_vec = processor_tensor.into_raw_vec_and_offset().0;
+        let (res_vec, res_shape ) = &self.operations[3].operation((out_vec, out_vec_shape))?;
+        let mut res_vec = res_vec.to_vec();
+        if norm_vec_shape.len() != 3 {
+            let res_tensor = ndarray::Array3::from_shape_vec((res_shape[1], res_shape[2], res_shape[3]), res_vec.to_vec())
+            .unwrap()
+            .permuted_axes([0, 2, 1])
+            .as_standard_layout()
+            .into_shape_with_order(norm_vec_shape.clone())
+            .unwrap()
+            .to_owned();
+            res_vec = res_tensor.into_raw_vec_and_offset().0;
+            
+        }
+        let res_shape = if norm_vec_shape.len() !=3 {norm_vec_shape} else { vec![res_shape[1], res_shape[2], res_shape[3]].to_vec()};
+        
+        Ok(((res_vec, res_shape)))
     }
 }
 
@@ -174,22 +262,92 @@ impl Layer for CrossAttnDownBlock2D {
     }
 }
 
-// #[test]
-// fn test_attention_bse() {
-//     let (weigths_1, weights_shape_1) = input(r"C:\study\coursework\src\trash\attn1_q_lin.safetensors".to_string()).unwrap();
-//     let (weigths_2, weights_shape_2) = input(r"C:\study\coursework\src\trash\attn1_k_lin.safetensors".to_string()).unwrap();
-//     let (weigths_3, weights_shape_3) = input(r"C:\study\coursework\src\trash\attn1_v_lin.safetensors".to_string()).unwrap();
-//     let (weigths_4 , weights_shape_4)  = input(r"C:\study\coursework\src\trash\attn1_out_lin.safetensors".to_string()).unwrap();
-//     let (bias_4 , bias_shape_4)  = input(r"C:\study\coursework\src\trash\attn1_out_lin_bias.safetensors".to_string()).unwrap();
-//     let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\attn1_input.safetensors".to_string()).unwrap();
-//     let attn1 = Attention::Attention_constr(
-//         weigths_1.to_vec(), weights_shape_1.to_vec(), weigths_1.to_vec(), weights_shape_1.to_vec(), false, 
-//         weigths_2.to_vec(), weights_shape_2.to_vec(), weigths_2.to_vec(), weights_shape_2.to_vec(), false, 
-//         weigths_3.to_vec(), weights_shape_3.to_vec(), weigths_3.to_vec(), weights_shape_3.to_vec(), false, 
-//         weigths_4.to_vec(), weights_shape_4.to_vec(), bias_4.to_vec(), bias_shape_4.to_vec(), true);
-//     let mut test_vec_shape = test_vec_shape.to_vec();
-//     test_vec_shape.insert(0, 1);
-//     print!("{:?}", test_vec_shape);
-//     let (res_vec, res_vec_shape) = attn1.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
-//     print!("{:?}", res_vec);
-// }
+#[test]
+fn test_attn_bse_unbiased() {
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_test.safetensors".to_string()).unwrap();
+    let (weigths_1, weights_shape_1) = input(r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors".to_string()).unwrap();
+    let (weigths_2, weights_shape_2) = input(r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors".to_string()).unwrap();
+    let (weigths_3, weights_shape_3) = input(r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors".to_string()).unwrap();
+    let (weigths_4, weights_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors".to_string()).unwrap(); 
+    let (bias_4, bias_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors".to_string()).unwrap(); 
+    let enc_placeholder = Rc::new(RefCell::new((Vec::<f32>::new(), Vec::<usize>::new())));
+    let attn1 = Attention::Attention_constr(weigths_1.to_vec(), weights_shape_1.to_vec(), weigths_1.to_vec(), weights_shape_1.to_vec(), false, 
+        weigths_2.to_vec(), weights_shape_2.to_vec(), weigths_2.to_vec(), weights_shape_2.to_vec(), false, 
+        weigths_3.to_vec(), weights_shape_3.to_vec(), weigths_3.to_vec(), weights_shape_3.to_vec(), false, 
+        weigths_4.to_vec(), weights_shape_4.to_vec(), bias_4.to_vec(), bias_shape_4.to_vec(), true, 
+        enc_placeholder, false, 20);
+    let (res_vec, res_vec_shape) = attn1.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_output_test.safetensors".to_string()).unwrap();
+    assert!(py_vec_shape.to_vec() == res_vec_shape);
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-05);
+    }
+}
+
+#[test]
+fn test_attn_bchw_unbiased() {
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_test_bchw.safetensors".to_string()).unwrap();
+    let (weigths_1, weights_shape_1) = input(r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors".to_string()).unwrap();
+    let (weigths_2, weights_shape_2) = input(r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors".to_string()).unwrap();
+    let (weigths_3, weights_shape_3) = input(r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors".to_string()).unwrap();
+    let (weigths_4, weights_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors".to_string()).unwrap(); 
+    let (bias_4, bias_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors".to_string()).unwrap(); 
+    let enc_placeholder = Rc::new(RefCell::new((Vec::<f32>::new(), Vec::<usize>::new())));
+    let attn1 = Attention::Attention_constr(weigths_1.to_vec(), weights_shape_1.to_vec(), weigths_1.to_vec(), weights_shape_1.to_vec(), false, 
+        weigths_2.to_vec(), weights_shape_2.to_vec(), weigths_2.to_vec(), weights_shape_2.to_vec(), false, 
+        weigths_3.to_vec(), weights_shape_3.to_vec(), weigths_3.to_vec(), weights_shape_3.to_vec(), false, 
+        weigths_4.to_vec(), weights_shape_4.to_vec(), bias_4.to_vec(), bias_shape_4.to_vec(), true, 
+        enc_placeholder, false, 20);
+    let (res_vec, res_vec_shape) = attn1.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_output_bchw_test.safetensors".to_string()).unwrap();
+    assert!(py_vec_shape.to_vec() == res_vec_shape);
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-05);
+    }
+}
+
+#[test]
+fn test_attn_bse_encoder_unbiased() {
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_test.safetensors".to_string()).unwrap();
+    let (encoder_vec, encoder_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_encoder_test.safetensors".to_string()).unwrap();
+    let (weigths_1, weights_shape_1) = input(r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors".to_string()).unwrap();
+    let (weigths_2, weights_shape_2) = input(r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors".to_string()).unwrap();
+    let (weigths_3, weights_shape_3) = input(r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors".to_string()).unwrap();
+    let (weigths_4, weights_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors".to_string()).unwrap(); 
+    let (bias_4, bias_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors".to_string()).unwrap(); 
+    let enc_placeholder = Rc::new(RefCell::new((encoder_vec.to_vec(), encoder_vec_shape.to_vec())));
+    let attn1 = Attention::Attention_constr(weigths_1.to_vec(), weights_shape_1.to_vec(), weigths_1.to_vec(), weights_shape_1.to_vec(), false, 
+        weigths_2.to_vec(), weights_shape_2.to_vec(), weigths_2.to_vec(), weights_shape_2.to_vec(), false, 
+        weigths_3.to_vec(), weights_shape_3.to_vec(), weigths_3.to_vec(), weights_shape_3.to_vec(), false, 
+        weigths_4.to_vec(), weights_shape_4.to_vec(), bias_4.to_vec(), bias_shape_4.to_vec(), true, 
+        enc_placeholder, true, 20);
+    let (res_vec, res_vec_shape) = attn1.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_output_encoder_test.safetensors".to_string()).unwrap();
+    assert!(py_vec_shape.to_vec() == res_vec_shape);
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-05);
+    }
+}
+
+#[test]
+fn test_attn_bchw_encoder_unbiased() {
+    let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_test_bchw.safetensors".to_string()).unwrap();
+    let (encoder_vec, encoder_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_encoder_test.safetensors".to_string()).unwrap();
+    let (weigths_1, weights_shape_1) = input(r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors".to_string()).unwrap();
+    let (weigths_2, weights_shape_2) = input(r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors".to_string()).unwrap();
+    let (weigths_3, weights_shape_3) = input(r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors".to_string()).unwrap();
+    let (weigths_4, weights_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors".to_string()).unwrap(); 
+    let (bias_4, bias_shape_4) = input(r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors".to_string()).unwrap(); 
+    let enc_placeholder = Rc::new(RefCell::new((encoder_vec.to_vec(), encoder_vec_shape.to_vec())));
+    let attn1 = Attention::Attention_constr(weigths_1.to_vec(), weights_shape_1.to_vec(), weigths_1.to_vec(), weights_shape_1.to_vec(), false, 
+        weigths_2.to_vec(), weights_shape_2.to_vec(), weigths_2.to_vec(), weights_shape_2.to_vec(), false, 
+        weigths_3.to_vec(), weights_shape_3.to_vec(), weigths_3.to_vec(), weights_shape_3.to_vec(), false, 
+        weigths_4.to_vec(), weights_shape_4.to_vec(), bias_4.to_vec(), bias_shape_4.to_vec(), true, 
+        enc_placeholder, true, 20);
+    let (res_vec, res_vec_shape) = attn1.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
+    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_attn1_output_bchw_encoder_test.safetensors".to_string()).unwrap();
+    assert!(py_vec_shape.to_vec() == res_vec_shape);
+    for i in 0..res_vec.len() {
+        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-05);
+    }
+}

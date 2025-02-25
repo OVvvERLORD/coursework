@@ -186,6 +186,7 @@ temb = torch.rand(2, 1280)
 resnet_list = []
 upsample2d_list = []
 downsample2d_list = []
+crossattnupblock_list = []
 for i, down_block in enumerate(unet.down_blocks):
     # print(f"Down Block {i}:")
     for j, resnet in enumerate(down_block.resnets):
@@ -209,69 +210,106 @@ for i, up_block in enumerate(unet.up_blocks):
                 upsample2d = smth[1]
     if i == 2:
         upblock2d = up_block
+    else:
+        crossattnupblock_list.append(up_block)
     # print(up_block)
 for resnet in unet.mid_block.resnets:
      resnet_list.append(resnet)
+for i, block in enumerate(unet.mid_block.named_children()):
+    if i == 0:
+        for j, attn in enumerate(block[1].named_children()):
+            for k, trans in enumerate(attn[1].named_children()):
+                if k == 2: # basic transformer blocks
+                    for r, btb in enumerate(trans[1].named_children()):
+                        if r == 3:
+                            for q, btb_layer in enumerate(btb[1].named_children()):
+                                if btb_layer[0] == "attn1":
+                                    attn1 = btb_layer[1]
+## attn testings
+# attn1_test = torch.rand(2, 1280, 1280)
+# # # output = attn1(attn1_test)
+# # # print(output, output.shape)
+# save_file({"attn1_test" : attn1_test}, r"C:\study\coursework\src\trash\test_attn1_test.safetensors")
+# save_file({"q" : attn1.to_q.weight}, r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors")
+# save_file({"k" : attn1.to_k.weight}, r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors")
+# save_file({"v" : attn1.to_v.weight}, r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors")
+# save_file({"out" : attn1.to_out[0].weight}, r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors")
+# save_file({"out" : attn1.to_out[0].bias}, r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors")
+# # # # save_file({"outp" : attn1(attn1_test)}, r"C:\study\coursework\src\trash\test_attn1_output_test.safetensors")
+# attn1_test_bchw = torch.rand(2, 1280, 16, 128)
+# save_file({"attn1_test" : attn1_test_bchw}, r"C:\study\coursework\src\trash\test_attn1_test_bchw.safetensors")
+# # save_file({"outp" : attn1(attn1_test_bchw).contiguous()}, r"C:\study\coursework\src\trash\test_attn1_output_bchw_test.safetensors")
+# encoder_tensor = torch.rand(2, 1280, 1280)
+# save_file({"attn1_test" : encoder_tensor}, r"C:\study\coursework\src\trash\test_attn1_encoder_test.safetensors")
+# save_file({"outp" : attn1(attn1_test, encoder_hidden_states = encoder_tensor)}, r"C:\study\coursework\src\trash\test_attn1_output_encoder_test.safetensors")
+# save_file({"outp" : attn1(attn1_test_bchw, encoder_hidden_states = encoder_tensor).contiguous()}, r"C:\study\coursework\src\trash\test_attn1_output_bchw_encoder_test.safetensors")
+
+## crossattnupbloc testings
+# print(crossattnupblock_list)
+
+
+
+
 
 
 
 ## downblock testings
-downblock2d_resnet_list = []
-for i, resnet in enumerate(downblock2d.resnets):
-    downblock2d_resnet_list.append(resnet)
-for j, block in enumerate(downblock2d.named_children()):
-    if j == 1:
-        downsample = block[1]
+# downblock2d_resnet_list = []
+# for i, resnet in enumerate(downblock2d.resnets):
+#     downblock2d_resnet_list.append(resnet)
+# for j, block in enumerate(downblock2d.named_children()):
+#     if j == 1:
+#         downsample = block[1]
 
 
-# print(downblock2d_resnet_list)
+# # print(downblock2d_resnet_list)
 
 
-temb = torch.rand(2, 1280)
-save_file({"temb" : temb}, r"C:\study\coursework\src\trash\test_downblock2d_temb.safetensors")
-downblock2d_test = torch.rand(2, 320, 128, 128)
-save_file({"test" : downblock2d_test}, r"C:\study\coursework\src\trash\test_downblock2d_test.safetensors")
+# temb = torch.rand(2, 1280)
+# save_file({"temb" : temb}, r"C:\study\coursework\src\trash\test_downblock2d_temb.safetensors")
+# downblock2d_test = torch.rand(2, 320, 128, 128)
+# save_file({"test" : downblock2d_test}, r"C:\study\coursework\src\trash\test_downblock2d_test.safetensors")
 
 
 
-resnet_1 = downblock2d_resnet_list[0]
-resnet_1.norm1.affine = False
-resnet_1.norm1.weight = None
-resnet_1.norm2.weight = None
-resnet_1.norm1.bias = None
-resnet_1.norm2.bias = None
-resnet_1.norm2.affine = False
-resnet_1.conv1.bias = None
-resnet_1.conv2.bias = None
-save_file({"conv1_weight" : resnet_1.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_weight.safetensors")
-save_file({"conv2_weight" : resnet_1.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_weight.safetensors")
-save_file({"linear_proj" : resnet_1.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_weight.safetensors")
-save_file({"linear_proj" : resnet_1.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_bias.safetensors")
+# resnet_1 = downblock2d_resnet_list[0]
+# resnet_1.norm1.affine = False
+# resnet_1.norm1.weight = None
+# resnet_1.norm2.weight = None
+# resnet_1.norm1.bias = None
+# resnet_1.norm2.bias = None
+# resnet_1.norm2.affine = False
+# resnet_1.conv1.bias = None
+# resnet_1.conv2.bias = None
+# save_file({"conv1_weight" : resnet_1.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_weight.safetensors")
+# save_file({"conv2_weight" : resnet_1.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_weight.safetensors")
+# save_file({"linear_proj" : resnet_1.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_weight.safetensors")
+# save_file({"linear_proj" : resnet_1.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_bias.safetensors")
 
-resnet_2 = downblock2d_resnet_list[1]
-resnet_2.norm1.affine = False
-resnet_2.norm1.weight = None
-resnet_2.norm2.weight = None
-resnet_2.norm1.bias = None
-resnet_2.norm2.bias = None
-resnet_2.norm2.affine = False
-resnet_2.conv1.bias = None
-resnet_2.conv2.bias = None
-save_file({"conv1_weight" : resnet_2.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_weight.safetensors")
-save_file({"conv2_weight" : resnet_2.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_weight.safetensors")
-save_file({"linear_proj" : resnet_2.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_weight.safetensors")
-save_file({"linear_proj" : resnet_2.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_bias.safetensors")
+# resnet_2 = downblock2d_resnet_list[1]
+# resnet_2.norm1.affine = False
+# resnet_2.norm1.weight = None
+# resnet_2.norm2.weight = None
+# resnet_2.norm1.bias = None
+# resnet_2.norm2.bias = None
+# resnet_2.norm2.affine = False
+# resnet_2.conv1.bias = None
+# resnet_2.conv2.bias = None
+# save_file({"conv1_weight" : resnet_2.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_weight.safetensors")
+# save_file({"conv2_weight" : resnet_2.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_weight.safetensors")
+# save_file({"linear_proj" : resnet_2.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_weight.safetensors")
+# save_file({"linear_proj" : resnet_2.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_bias.safetensors")
 
-for i, block in enumerate(downsample.named_children()):
-    conv_downsample = block[1]
-conv_downsample.conv.bias = None
-save_file({"conv_down_weight": conv_downsample.conv.weight}, r"C:\study\coursework\src\trash\test_downblock2d_downsample.safetensors")
-output = downblock2d(downblock2d_test, temb = temb)
-save_file({"downsample2d_out": output[0]}, r"C:\study\coursework\src\trash\test_downsample2d_output.safetensors")
+# for i, block in enumerate(downsample.named_children()):
+#     conv_downsample = block[1]
+# conv_downsample.conv.bias = None
+# save_file({"conv_down_weight": conv_downsample.conv.weight}, r"C:\study\coursework\src\trash\test_downblock2d_downsample.safetensors")
+# output = downblock2d(downblock2d_test, temb = temb)
+# save_file({"downsample2d_out": output[0]}, r"C:\study\coursework\src\trash\test_downsample2d_output.safetensors")
 
-save_file({"downsample2d_out_hidden" : output[1][0]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden1.safetensors")
-save_file({"downsample2d_out_hidden" : output[1][1]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden2.safetensors")
-save_file({"downsample2d_out_hidden" : output[1][2]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden3.safetensors")
+# save_file({"downsample2d_out_hidden" : output[1][0]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden1.safetensors")
+# save_file({"downsample2d_out_hidden" : output[1][1]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden2.safetensors")
+# save_file({"downsample2d_out_hidden" : output[1][2]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden3.safetensors")
 
 
 
