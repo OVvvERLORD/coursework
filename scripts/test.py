@@ -193,7 +193,6 @@ for i, down_block in enumerate(unet.down_blocks):
         # print(f"  ResNet Layer {j}: {resnet}")
         resnet_list.append(resnet)
     for k, down_block_deeper in enumerate(down_block.named_children()):
-
         if down_block_deeper[0] == 'downsamplers':
             for r, downsample2d in enumerate(down_block_deeper[1].named_children()):
                 downsample2d_list.append(downsample2d[1])
@@ -225,6 +224,84 @@ for i, block in enumerate(unet.mid_block.named_children()):
                             for q, btb_layer in enumerate(btb[1].named_children()):
                                 if btb_layer[0] == "attn1":
                                     attn1 = btb_layer[1]
+
+crossattnupblock1 = crossattnupblock_list[0]
+## Basic transformer block testings
+# btbsup = []
+# for i, trans in enumerate(crossattnupblock1.attentions.named_children()):
+#     if trans[0] == '1':
+#         for j in trans[1].transformer_blocks:
+#             btbsup.append(j)
+#     # for x in trans[1].transformer_blocks:
+#     #     print(x.dim, x.attention_head_dim, x.num_attention_heads, x.attention_bias, x.positional_embeddings, x.num_positional_embeddings, x._chunk_size, x.only_cross_attention )
+
+# btb1_test = torch.rand(2, 1280, 1280)
+# btb1_encoder = torch.rand(2, 1280, 2048)
+# btb1 = btbsup[0]
+# btb1.norm1.elementwise_affine= False
+# btb1.norm1.weight = None
+# btb1.norm1.bias = None
+# btb1.norm2.elementwise_affine= False
+# btb1.norm2.weight = None
+# btb1.norm2.bias = None
+# btb1.norm3.elementwise_affine= False
+# btb1.norm3.weight = None
+# btb1.norm3.bias = None
+# save_file({"inp" : btb1_test}, r"C:\study\coursework\src\trash\test_btb1_test.safetensors")
+# save_file({"inp": btb1_encoder}, r"C:\study\coursework\src\trash\test_btb1_encoder.safetensors")
+
+# save_file({"q" : btb1.attn1.to_q.weight}, r"C:\study\coursework\src\trash\test_btb1_attn1_q_test.safetensors")
+# save_file({"k" : btb1.attn1.to_k.weight}, r"C:\study\coursework\src\trash\test_btb1_attn1_k_test.safetensors")
+# save_file({"v" : btb1.attn1.to_v.weight}, r"C:\study\coursework\src\trash\test_btb1_attn1_v_test.safetensors")
+# save_file({"out" : btb1.attn1.to_out[0].weight}, r"C:\study\coursework\src\trash\test_btb1_attn1_out_w_test.safetensors")
+# save_file({"out" : btb1.attn1.to_out[0].bias}, r"C:\study\coursework\src\trash\test_btb1_attn1_out_b_test.safetensors")
+
+# save_file({"q" : btb1.attn2.to_q.weight}, r"C:\study\coursework\src\trash\test_btb1_attn2_q_test.safetensors")
+# save_file({"k" : btb1.attn2.to_k.weight}, r"C:\study\coursework\src\trash\test_btb1_attn2_k_test.safetensors")
+# save_file({"v" : btb1.attn2.to_v.weight}, r"C:\study\coursework\src\trash\test_btb1_attn2_v_test.safetensors")
+# save_file({"out" : btb1.attn2.to_out[0].weight}, r"C:\study\coursework\src\trash\test_btb1_attn2_out_w_test.safetensors")
+# save_file({"out" : btb1.attn2.to_out[0].bias}, r"C:\study\coursework\src\trash\test_btb1_attn2_out_b_test.safetensors")
+
+# for i, x in enumerate(btb1.ff.net.named_children()):
+#     if x[0] == '0':
+#         print(x[1].proj)
+#         save_file({"proj" : x[1].proj.weight}, r"C:\study\coursework\src\trash\test_btb1_geglu_w_test.safetensors")
+#         save_file({"proj" : x[1].proj.bias}, r"C:\study\coursework\src\trash\test_btb1_geglu_b_test.safetensors")
+#     elif x[0] == '2':
+#         print(x[1])
+#         save_file({"ff" : x[1].weight}, r"C:\study\coursework\src\trash\test_btb1_ff_w_test.safetensors")
+#         save_file({"ff" : x[1].bias}, r"C:\study\coursework\src\trash\test_btb1_ff_b_test.safetensors")
+
+# # output = btb1(btb1_test, encoder_hidden_states=btb1_encoder)
+# # print(output)
+# # save_file({"outp": output}, r"C:\study\coursework\src\trash\test_btb1_output_test.safetensors")
+# # norm = btb1.norm1(btb1_test)
+
+# # norm_attn = btb1.attn1(norm)
+
+# # s = norm_attn + btb1_test
+
+# # norm2 = btb1.norm2(s)
+
+# # norm2_attn2 = btb1.attn2(norm2, btb1_encoder)
+
+# # s = norm2_attn2 + s
+
+# # norm3 = btb1.norm3(s)
+
+# # ff = btb1.ff(norm3)
+
+# # s = ff + s
+
+# btb1_bchw = torch.rand(2, 640, 2, 1280)
+# save_file({"bchw" : btb1_bchw}, r"C:\study\coursework\src\trash\test_btb1_bchw_test.safetensors")
+# output_bchw = btb1(btb1_bchw, encoder_hidden_states=btb1_encoder)
+# print(output_bchw, output_bchw.shape)
+
+
+
+
+
 ## attn testings
 # attn1_test = torch.rand(2, 1280, 1280)
 # # # output = attn1(attn1_test)

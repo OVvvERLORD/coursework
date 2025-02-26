@@ -1,3 +1,5 @@
+use ndarray::Axis;
+
 use crate::layers::layer::Layer;
 use crate::func::functions::{input, output};
 
@@ -52,26 +54,28 @@ pub struct LayerNorm {
 }
 impl Layer for LayerNorm {
     fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
-        let mut vec = args.0.clone();
+        let mut vec = args.0;
+        let shape = args.1;
         let limit = self.number;
-        for i in (0..args.0.len()).step_by(limit) {
-            let mut mean: f32 = 0.;
-            let mut var: f32 = 0.;
-            for j in 0..limit {
-                mean = mean + vec[i + j];
-            }
-            mean = mean / (limit as f32);
-            for j in 0..limit {
-                var = var + (vec[i + j] - mean).powf(2.);
-            }
-            var = var / (limit as f32);
-            let std = (var + self.eps).sqrt();
-            for j in 0..limit {
-                vec[i + j] = ((vec[i + j] - mean) * self.gamma) / (std);
-                vec[i + j] = vec[i + j] + self.beta;
+        let mut tensor = if shape.len() != 3
+        {ndarray::Array4::from_shape_vec((shape[0], shape[1], shape[2], shape[3]), vec.to_vec()).unwrap()}
+        else 
+        {ndarray::Array4::from_shape_vec((1, shape[0], shape[1], shape[2]), vec).unwrap()};
+        
+        for mut batch in tensor.axis_iter_mut(Axis(0)) {
+            for mut channel in batch.axis_iter_mut(Axis(0)) {
+                for mut height in channel.axis_iter_mut(Axis(0)) {
+                    let mean = height.mean().unwrap();
+                    let var = height.mapv(|x| (x - mean).powi(2)).mean().unwrap() * 1280. / 1279.;
+                    let std = (var + self.eps).sqrt();
+                    for x in height.iter_mut() {
+                        *x = (*x - mean) / std;
+                    }
+                }
             }
         }
-        Ok((vec, args.1))
+        vec = tensor.as_standard_layout().to_owned().into_raw_vec_and_offset().0;
+        Ok((vec, shape))
     }
 }
 
