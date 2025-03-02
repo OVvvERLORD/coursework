@@ -39,7 +39,7 @@ impl Layer for UpBlock2d {
         let hidden_tensors = &self.res_hidden_tensors.borrow_mut();
         let mut res_vec = args.0;
         let mut res_vec_shape = args.1;
-        let mut idx = 0;
+        let mut idx = &hidden_tensors.len() - 1;
         for layer in operations {
             let (res_hidden_vec, res_hidden_shape) = &hidden_tensors[idx];
             let res_vec_matr = ndarray::Array4::from_shape_vec((res_vec_shape[0], res_vec_shape[1], res_vec_shape[2], res_vec_shape[3]), res_vec.clone()).unwrap();
@@ -51,7 +51,7 @@ impl Layer for UpBlock2d {
             let (temp_vec, temp_vec_shape) = layer.operation((done_vec, done_vec_shape))?;
             res_vec = temp_vec;
             res_vec_shape = temp_vec_shape;
-            idx+=1;
+            idx = if idx > 0 {idx - 1} else {0};
         } 
         Ok((res_vec, res_vec_shape))
     }

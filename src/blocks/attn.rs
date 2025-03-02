@@ -184,6 +184,7 @@ impl Layer for Attention {
 
 pub struct CrossAttnUpBlock2D {
     pub operations : Vec<Box<dyn Layer>>,
+    pub hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>,
 }
 
 impl CrossAttnUpBlock2D {
@@ -205,7 +206,7 @@ impl CrossAttnUpBlock2D {
         vec.push(Box::new(transformer3));
         let upsample = Upsample2D::Upsample2D_constr(params.in_channels, params.out_channels, params.padding, params.stride, params.kernel_size, params.kernel_weights);
         vec.push(Box::new(upsample));
-        Self { operations: vec }
+        Self { operations: vec , hidden_states: params.hidden_states}
     }
 }
 
@@ -214,10 +215,27 @@ impl Layer for CrossAttnUpBlock2D {
         let operations = &self.operations;
         let mut res_vec = args.0;
         let mut res_vec_shape = args.1;
+        let mut hidden_states = self.hidden_states.borrow_mut();
+        let mut hidden_idx = hidden_states.len() - 1;
+        let mut idx = 2;
+        let mut i = 0;
         for layer in operations {
+            if idx == 2 && i != 6 {
+                let (hidden_vec, hidden_vec_shape) = &hidden_states[hidden_idx];
+                let hidden_tensor = ndarray::Array4::from_shape_vec((hidden_vec_shape[0], hidden_vec_shape[1], hidden_vec_shape[2], hidden_vec_shape[3]), hidden_vec.to_vec()).unwrap();
+                let mut curr_tensor = ndarray::Array4::from_shape_vec((res_vec_shape[0], res_vec_shape[1], res_vec_shape[2], res_vec_shape[3]), res_vec).unwrap();
+                curr_tensor = ndarray::concatenate(ndarray::Axis(1), &[curr_tensor.view(), hidden_tensor.view()]).unwrap();
+                let temp_shape = curr_tensor.dim();
+                res_vec_shape = vec![temp_shape.0, temp_shape.1, temp_shape.2, temp_shape.3].to_vec();
+                res_vec = curr_tensor.as_standard_layout().to_owned().into_raw_vec_and_offset().0;
+                idx = 0;
+                hidden_idx = if hidden_idx > 0 {hidden_idx - 1} else {0};
+            }
             let (temp_vec, temp_vec_shape) = layer.operation((res_vec.clone(), res_vec_shape.clone()))?;
             res_vec = temp_vec;
             res_vec_shape = temp_vec_shape;
+            idx += 1;
+            i += 1;
         } 
         Ok((res_vec, res_vec_shape))
     }
@@ -225,6 +243,7 @@ impl Layer for CrossAttnUpBlock2D {
 pub struct CrossAttnDownBlock2D {
     pub if_downsample2d : bool,
     pub operations : Vec<Box<dyn Layer>>,
+    pub hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>
 }
 
 impl CrossAttnDownBlock2D {
@@ -244,7 +263,7 @@ impl CrossAttnDownBlock2D {
             let downsample2d = DownSample2D::DownSample2D_constr(params.in_channels, params.out_channels, params.padding, params.stride, params.kernel_size, params.kernel_weights);
             vec.push(Box::new(downsample2d));
         }
-        Self { operations: vec, if_downsample2d : params.is_downsample2d }
+        Self { operations: vec, if_downsample2d : params.is_downsample2d, hidden_states: params.hidden_states }
     }
 }
 
@@ -253,11 +272,22 @@ impl Layer for CrossAttnDownBlock2D {
         let operations = &self.operations;
         let mut res_vec = args.0;
         let mut res_vec_shape = args.1;
+        let mut output_states = self.hidden_states.borrow_mut();
+        let mut idx = 0;
         for layer in operations {
             let (temp_vec, temp_vec_shape) = layer.operation((res_vec.clone(), res_vec_shape.clone()))?;
             res_vec = temp_vec;
             res_vec_shape = temp_vec_shape;
+            if idx == 1 {
+                output_states.push((res_vec.clone(), res_vec_shape.clone()));
+                idx = 0;
+            } else {
+                idx += 1;
+            }
         } 
+        if self.if_downsample2d {
+            output_states.push((res_vec.clone(), res_vec_shape.clone()));
+        }
         Ok((res_vec, res_vec_shape))
     }
 }

@@ -1,6 +1,6 @@
 use cudarc::{self};
 use core::{f32};
-use std::rc::Rc;
+use std::{rc::Rc, sync::mpsc::Receiver};
 use std::cell::RefCell;
 
 mod func;
