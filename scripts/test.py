@@ -229,58 +229,58 @@ for i, block in enumerate(unet.mid_block.named_children()):
                                 if btb_layer[0] == "attn1":
                                     attn1 = btb_layer[1]
 ## transformer testings
-# trans_input = torch.rand(2, 1280, 4, 4)
-# trans_encoder = torch.rand(2, 1280, 2048)
-# trans2d.norm.weight = None
-# trans2d.norm.bias = None
-# trans2d.norm.affine = False
-# k = 0
-# for x in trans2d.transformer_blocks:
-#     # print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
-#     x.norm1.bias = None
-#     x.norm1.weight = None
-#     x.norm1.elementwise_affine = False
-#     x.norm2.bias = None
-#     x.norm2.weight = None
-#     x.norm2.elementwise_affine = False
-#     x.norm3.bias = None
-#     x.norm3.weight = None
-#     x.norm3.elementwise_affine = False
-#     save_file({"q" : x.attn1.to_q.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_q_test.safetensors")
-#     save_file({"k" : x.attn1.to_k.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_k_test.safetensors")
-#     save_file({"v" : x.attn1.to_v.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_v_test.safetensors")
-#     save_file({"out" : x.attn1.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_out_w_test.safetensors")
-#     save_file({"out" : x.attn1.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_out_b_test.safetensors")
+trans_input = torch.rand(2, 1280, 4, 4)
+trans_encoder = torch.rand(2, 1280, 2048)
+trans2d.norm.weight = None
+trans2d.norm.bias = None
+trans2d.norm.affine = False
+k = 0
+for x in trans2d.transformer_blocks:
+    # print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
+    x.norm1.bias = None
+    x.norm1.weight = None
+    x.norm1.elementwise_affine = False
+    x.norm2.bias = None
+    x.norm2.weight = None
+    x.norm2.elementwise_affine = False
+    x.norm3.bias = None
+    x.norm3.weight = None
+    x.norm3.elementwise_affine = False
+    save_file({"q" : x.attn1.to_q.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_q_test.safetensors")
+    save_file({"k" : x.attn1.to_k.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_k_test.safetensors")
+    save_file({"v" : x.attn1.to_v.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_v_test.safetensors")
+    save_file({"out" : x.attn1.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_out_w_test.safetensors")
+    save_file({"out" : x.attn1.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn1_out_b_test.safetensors")
     
-#     save_file({"q" : x.attn2.to_q.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_q_test.safetensors")
-#     save_file({"k" : x.attn2.to_k.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_k_test.safetensors")
-#     save_file({"v" : x.attn2.to_v.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_v_test.safetensors")
-#     save_file({"out" : x.attn2.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_out_w_test.safetensors")
-#     save_file({"out" : x.attn2.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_out_b_test.safetensors")
+    save_file({"q" : x.attn2.to_q.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_q_test.safetensors")
+    save_file({"k" : x.attn2.to_k.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_k_test.safetensors")
+    save_file({"v" : x.attn2.to_v.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_v_test.safetensors")
+    save_file({"out" : x.attn2.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_out_w_test.safetensors")
+    save_file({"out" : x.attn2.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_attn2_out_b_test.safetensors")
 
-#     for i, y in enumerate(x.ff.net.named_children()):
-#         if y[0] == '0':
-#             save_file({"proj" : y[1].proj.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_geglu_w_test.safetensors")
-#             save_file({"proj" : y[1].proj.bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_geglu_b_test.safetensors")
-#         elif y[0] == '2':
-#             save_file({"ff" : y[1].weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_ff_w_test.safetensors")
-#             save_file({"ff" : y[1].bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_ff_b_test.safetensors")
-#     k += 1
+    for i, y in enumerate(x.ff.net.named_children()):
+        if y[0] == '0':
+            save_file({"proj" : y[1].proj.weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_geglu_w_test.safetensors")
+            save_file({"proj" : y[1].proj.bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_geglu_b_test.safetensors")
+        elif y[0] == '2':
+            save_file({"ff" : y[1].weight}, fr"C:\study\coursework\src\trash\test_trans_{k}_ff_w_test.safetensors")
+            save_file({"ff" : y[1].bias}, fr"C:\study\coursework\src\trash\test_trans_{k}_ff_b_test.safetensors")
+    k += 1
 
-# save_file({"inp" : trans_input}, r"C:\study\coursework\src\trash\test_trans_test.safetensors")    
-# save_file({"inp" : trans_encoder}, r"C:\study\coursework\src\trash\test_trans_encoder_test.safetensors")    
-# save_file({"in" : trans2d.proj_in.weight} , r"C:\study\coursework\src\trash\test_trans_projin_w_test.safetensors")
-# save_file({"in" : trans2d.proj_in.bias} , r"C:\study\coursework\src\trash\test_trans_projin_b_test.safetensors")
-# save_file({"out" : trans2d.proj_out.weight} , r"C:\study\coursework\src\trash\test_trans_projout_w_test.safetensors")
-# save_file({"out" : trans2d.proj_out.bias} , r"C:\study\coursework\src\trash\test_trans_projout_b_test.safetensors")
-# # print(trans2d.proj_out.weight)
+save_file({"inp" : trans_input}, r"C:\study\coursework\src\trash\test_trans_test.safetensors")    
+save_file({"inp" : trans_encoder}, r"C:\study\coursework\src\trash\test_trans_encoder_test.safetensors")    
+save_file({"in" : trans2d.proj_in.weight} , r"C:\study\coursework\src\trash\test_trans_projin_w_test.safetensors")
+save_file({"in" : trans2d.proj_in.bias} , r"C:\study\coursework\src\trash\test_trans_projin_b_test.safetensors")
+save_file({"out" : trans2d.proj_out.weight} , r"C:\study\coursework\src\trash\test_trans_projout_w_test.safetensors")
+save_file({"out" : trans2d.proj_out.bias} , r"C:\study\coursework\src\trash\test_trans_projout_b_test.safetensors")
+# print(trans2d.proj_out.weight)
 # print(trans2d.transformer_blocks[0].ff)
-# hand_output = trans2d.norm(trans_input)
+hand_output = trans2d.norm(trans_input)
 
-# hand_output = hand_output.permute(0, 2, 3, 1).reshape(2, 4 * 4, 1280)
-# hand_output = trans2d.proj_in(hand_output)
-# # print(hand_output)
-# k = 0
+hand_output = hand_output.permute(0, 2, 3, 1).reshape(2, 4 * 4, 1280)
+hand_output = trans2d.proj_in(hand_output)
+# print(hand_output)
+k = 0
 # for x in trans2d.transformer_blocks:
 #     hand_output = x(hand_output, encoder_hidden_states = trans_encoder)
 
@@ -297,7 +297,14 @@ for i, block in enumerate(unet.mid_block.named_children()):
 # # )
 # # hand_output = hand_output + trans_input
 # output = trans2d(trans_input, encoder_hidden_states = trans_encoder)
+# save_file({"output": output.to_tuple()[0]}, r"C:\study\coursework\src\trash\test_trans_output2_test.safetensors")
+# print(output.to_tuple()[0])\
 
+trans2d_large_input = torch.rand(2, 1280, 64, 20)
+save_file({"input_large" : trans2d_large_input}, r"C:\study\coursework\src\trash\test_trans_large_input_test.safetensors")
+large_output = trans2d(trans2d_large_input, encoder_hidden_states = trans_encoder)
+save_file({"output": large_output.to_tuple()[0]}, r"C:\study\coursework\src\trash\test_trans_large_output_test.safetensors")
+print(large_output.to_tuple()[0])
 # # print(hand_output)
 # # print(output.to_tuple()[0].shape)
 # # # print(torch.allclose(hand_output, output.to_tuple()[0], 1e-67))

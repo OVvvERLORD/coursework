@@ -1,5 +1,5 @@
 [package]
-name = "conv_rust"
+name = "SDXL"
 version = "0.1.0"
 edition = "2021"
 
