@@ -43,7 +43,7 @@ impl Layer for Resnet2d {
                 let lin_res = self.operations[i + 1].operation((act_lin_res.0, act_lin_res.1))?;
                 let mut curr_tensor = ndarray::Array4::from_shape_vec((res_shape_vec[0],res_shape_vec[1],res_shape_vec[2],res_shape_vec[3]), res_vec.clone())?;
                 let time_tensor = ndarray::Array4::from_shape_vec((lin_res.1[2], lin_res.1[3], 1, 1), lin_res.0)?;
-                curr_tensor = curr_tensor + time_tensor;
+                curr_tensor = curr_tensor.clone() + time_tensor.broadcast(curr_tensor.dim()).unwrap();
                 res_vec = curr_tensor.into_raw_vec_and_offset().0;
                 continue;
             }
@@ -59,7 +59,7 @@ impl Layer for Resnet2d {
             let shortcut_vec = shortcut_res.0;
             let mut curr_tensor = ndarray::Array4::from_shape_vec((res_shape_vec[0],res_shape_vec[1],res_shape_vec[2],res_shape_vec[3]), res_vec.clone())?;
             let short_tensor = ndarray::Array4::from_shape_vec((shortcut_res.1[0], shortcut_res.1[1], shortcut_res.1[2], shortcut_res.1[3]), shortcut_vec.clone())?;
-            curr_tensor = curr_tensor + short_tensor;
+            curr_tensor = curr_tensor.clone() + short_tensor.broadcast(curr_tensor.dim()).unwrap();
             res_vec = curr_tensor.into_raw_vec_and_offset().0;
         } else {
             let mut curr_tensor =  ndarray::Array4::from_shape_vec((res_shape_vec[0],res_shape_vec[1],res_shape_vec[2],res_shape_vec[3]), res_vec.clone())?;

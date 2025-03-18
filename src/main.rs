@@ -1,5 +1,7 @@
+use blocks::down;
 use cudarc::{self};
-use core::{f32};
+use core::f32;
+use std::fmt::format;
 use std::{rc::Rc, sync::mpsc::Receiver};
 use std::cell::RefCell;
 

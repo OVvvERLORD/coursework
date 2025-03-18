@@ -35,7 +35,7 @@ impl Layer for GroupNorm {
                     var += (vec[x] - mean).powf(2.);
                 }
                 var = var / (cnt);
-                let std = (var+eps).sqrt();
+                let std = (var+eps).abs().sqrt();
                 for x in start_index..end_index {
                     vec[x] = ((vec[x] - mean) * gamma) / (std);
                     vec[x] += beta;
@@ -66,8 +66,8 @@ impl Layer for LayerNorm {
             for mut channel in batch.axis_iter_mut(Axis(0)) {
                 for mut height in channel.axis_iter_mut(Axis(0)) {
                     let mean = height.mean().unwrap();
-                    let var = height.mapv(|x| (x - mean).powi(2)).mean().unwrap() * 1280. / 1279.;
-                    let std = (var + self.eps).sqrt();
+                    let var = height.mapv(|x| (x - mean).powi(2)).mean().unwrap();
+                    let std = (var + self.eps).abs().sqrt();
                     for x in height.iter_mut() {
                         *x = (*x - mean) / std;
                     }

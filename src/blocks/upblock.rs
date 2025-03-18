@@ -36,12 +36,13 @@ impl UpBlock2d {
 impl Layer for UpBlock2d {
     fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
         let operations = &self.operations;
-        let hidden_tensors = &self.res_hidden_tensors.borrow_mut();
+        let mut hidden_tensors = self.res_hidden_tensors.borrow_mut();
         let mut res_vec = args.0;
         let mut res_vec_shape = args.1;
         let mut idx = &hidden_tensors.len() - 1;
         for layer in operations {
-            let (res_hidden_vec, res_hidden_shape) = &hidden_tensors[idx];
+            // let (res_hidden_vec, res_hidden_shape) = &hidden_tensors[idx];
+            let (res_hidden_vec, res_hidden_shape) = hidden_tensors.pop().unwrap();
             let res_vec_matr = ndarray::Array4::from_shape_vec((res_vec_shape[0], res_vec_shape[1], res_vec_shape[2], res_vec_shape[3]), res_vec.clone()).unwrap();
             let hidden_vec_matr = ndarray::Array4::from_shape_vec((res_hidden_shape[0], res_hidden_shape[1], res_hidden_shape[2], res_hidden_shape[3]), res_hidden_vec.clone()).unwrap();
             let done_vec_matr = ndarray::concatenate(ndarray::Axis(1), &[res_vec_matr.view(), hidden_vec_matr.view()]).unwrap().as_standard_layout().to_owned();
