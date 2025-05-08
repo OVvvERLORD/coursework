@@ -48,7 +48,7 @@ impl Layer for Up_blocks {
         let mut res_vec = args.0;
         let mut res_vec_shape = args.1;
         for layer in operations {
-            let (temp_vec, temp_vec_shape) = layer.operation((res_vec.clone(), res_vec_shape.clone()))?;
+            let (temp_vec, temp_vec_shape) = layer.operation((res_vec.clone(), res_vec_shape.clone())).unwrap();
             res_vec = temp_vec;
             res_vec_shape = temp_vec_shape;
         } 
@@ -59,6 +59,7 @@ impl Layer for Up_blocks {
 #[test]
 fn test_up_blocks_unbiased() {
     let (temb, temb_shape) = input(format!(r"C:\study\coursework\src\trash\test_upblocks_temb.safetensors")).unwrap();
+    let time_emb = Rc::new(RefCell::new((temb.to_vec(), temb_shape.to_vec())));
     let (encoder_vec, encoder_vec_shape) = input(format!(r"C:\study\coursework\src\trash\test_upblocks_encoder.safetensors")).unwrap();
     let res_hidden_states = Rc::new(RefCell::new(Vec::<(Vec::<f32>, Vec::<usize>)>::new()));
     let (conv1_res1_vec, _) = input(r"C:\study\coursework\src\trash\test_upblocks_upblock2d_res0_conv1_weight.safetensors".to_string()).unwrap();
@@ -75,7 +76,7 @@ fn test_up_blocks_unbiased() {
         in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: conv2_res1_vec.to_vec(),
         is_shortcut: true,
         in_channels_short: 960, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: conv_short_res1_vec.to_vec(),
-        time_emb: temb.to_vec(), time_emb_shape: temb_shape.to_vec()
+        time_emb: Rc::clone(&time_emb)
     };
 
     let (conv1_res2_vec, _) = input(r"C:\study\coursework\src\trash\test_upblocks_upblock2d_res1_conv1_weight.safetensors".to_string()).unwrap();
@@ -87,7 +88,7 @@ fn test_up_blocks_unbiased() {
         number_of_groups_1: 32, eps_1: 1e-05, gamma_1: 1., beta_1: 0.,
         in_channels_1: 640, out_channels_1: 320, kernel_size_1: 3, stride_1: 1, padding_1: 1, kernel_weights_1: conv1_res2_vec.to_vec(),
         weigths: lin_res2_vec.to_vec(), weights_shape: lin_res2_vec_shape.to_vec(), bias: lin_res2_bias.to_vec(), bias_shape: lin_res2_bias_shape.to_vec(), is_bias: true,
-        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: 1., beta_2: 0., time_emb: temb.to_vec(), time_emb_shape: temb_shape.to_vec(),
+        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: 1., beta_2: 0., time_emb: Rc::clone(&time_emb),
         in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: conv2_res2_vec.to_vec(),
         is_shortcut: true,
         in_channels_short: 640, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: conv_short_res2_vec.to_vec()
@@ -103,7 +104,7 @@ fn test_up_blocks_unbiased() {
         number_of_groups_1: 32, eps_1: 1e-05, gamma_1: 1., beta_1: 0.,
         in_channels_1: 640, out_channels_1: 320, kernel_size_1: 3, stride_1: 1, padding_1: 1, kernel_weights_1: conv1_res3_vec.to_vec(),
         weigths: lin_res3_vec.to_vec(), weights_shape: lin_res3_vec_shape.to_vec(), bias: lin_res3_bias.to_vec(), bias_shape: lin_res3_bias_shape.to_vec(), is_bias: true,
-        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: 1., beta_2: 0., time_emb: temb.to_vec(), time_emb_shape: temb_shape.to_vec(),
+        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: 1., beta_2: 0., time_emb: Rc::clone(&time_emb),
         in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: conv2_res3_vec.to_vec(),
         is_shortcut: true,
         in_channels_short: 640, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: conv_short_res3_vec.to_vec()
@@ -131,7 +132,7 @@ fn test_up_blocks_unbiased() {
             in_channels_2: 1280, out_channels_2: 1280, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: kernel_weights_2.to_vec(),
             is_shortcut: true,
             in_channels_short: in_ch, out_channels_short: 1280, padding_short: 0, stride_short:1, kernel_size_short: 1, kernel_weights_short: kernel_weights_short.to_vec(),
-            time_emb: temb.to_vec(), time_emb_shape: temb_shape.to_vec()
+            time_emb: Rc::clone(&time_emb)
         };
         if i == 0 {
             resnet1_params = Some(resnet_par);
@@ -236,7 +237,7 @@ fn test_up_blocks_unbiased() {
             in_channels_2: 640, out_channels_2: 640, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: kernel_weights_2.to_vec(),
             is_shortcut: true,
             in_channels_short: in_ch, out_channels_short: 640, padding_short: 0, stride_short:1, kernel_size_short: 1, kernel_weights_short: kernel_weights_short.to_vec(),
-            time_emb: temb.to_vec(), time_emb_shape: temb_shape.to_vec()
+            time_emb: Rc::clone(&time_emb)
         };
         if i == 0 {
             resnet12_params = Some(resnet_par);

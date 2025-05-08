@@ -36,7 +36,8 @@ pub struct Resnet2d_params {
     pub in_channels_2 : usize, pub out_channels_2 : usize, pub padding_2 : i32,  pub stride_2 : i32, pub kernel_size_2 : usize, pub kernel_weights_2 : Vec<f32>,
     pub is_shortcut : bool,
     pub in_channels_short : usize, pub out_channels_short : usize, pub padding_short : i32,  pub stride_short : i32, pub kernel_size_short : usize, pub kernel_weights_short: Vec<f32>,
-    pub time_emb : Vec<f32>, pub time_emb_shape : Vec<usize>,
+    // pub time_emb : Vec<f32>, pub time_emb_shape : Vec<usize>,
+    pub time_emb : Rc<RefCell<(Vec<f32>, Vec<usize>)>>
 }
 
 pub struct CrossAttnUpBlock2D_params {

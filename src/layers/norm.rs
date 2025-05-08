@@ -56,7 +56,7 @@ impl Layer for LayerNorm {
     fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
         let mut vec = args.0;
         let shape = args.1;
-        let limit = self.number;
+        // let limit = self.number;
         let mut tensor = if shape.len() != 3
         {ndarray::Array4::from_shape_vec((shape[0], shape[1], shape[2], shape[3]), vec.to_vec()).unwrap()}
         else 

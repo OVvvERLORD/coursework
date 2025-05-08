@@ -63,6 +63,7 @@ fn test_crossattnmidblock_small_unbiased() {
     let (input_vec, input_vec_shape) = input(r"C:\study\coursework\src\trash\test_crossattnmidblock_input.safetensors".to_string()).unwrap();
     let (encoder_vec, encoder_vec_shape) = input(r"C:\study\coursework\src\trash\test_crossattnmidblock_encoder.safetensors".to_string()).unwrap();
     let (temb_vec, temb_vec_shape) = input(r"C:\study\coursework\src\trash\test_crossattnmidblock_temb.safetensors".to_string()).unwrap();
+    let time_emb = Rc::new(RefCell::new((temb_vec.to_vec(), temb_vec_shape.to_vec())));
     for i in 0..2 {
         let (kernel_weights_1, _) = input(format!(r"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{}_conv1.safetensors", i)).unwrap();
         let (kernel_weights_2, _) = input(format!(r"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{}_conv2.safetensors", i)).unwrap();
@@ -77,7 +78,7 @@ fn test_crossattnmidblock_small_unbiased() {
             in_channels_2: 1280, out_channels_2: 1280, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: kernel_weights_2.to_vec(),
             is_shortcut: false,
             in_channels_short: in_ch, out_channels_short: 1280, padding_short: 0, stride_short:1, kernel_size_short: 1, kernel_weights_short: kernel_weights_1.to_vec(),
-            time_emb: temb_vec.to_vec(), time_emb_shape: temb_vec_shape.to_vec()
+            time_emb: Rc::clone(&time_emb)
         };
         if i == 0 {
             resnet1_params = Some(resnet_par);

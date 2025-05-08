@@ -28,7 +28,7 @@ pub fn Tensor_Mul(args:(Vec<f32>, Vec<usize>, Vec<f32>, Vec<usize>)) ->  Result<
     Ok((result, result_shape))
 }
 
-pub fn input(input_name: String) -> Result<(Arc<Vec<f32>>, Arc<Vec<usize>>), Box<dyn std::error::Error>> { 
+pub fn input (input_name: String) -> Result<(Arc<Vec<f32>>, Arc<Vec<usize>>), Box<dyn std::error::Error>> { 
     let mut file = File::open(input_name.to_string())?;
     let mut buffer = Vec::<u8>::new();
     let _ = file.read_to_end(&mut buffer);
@@ -83,5 +83,45 @@ pub fn nearest_neighbour_interpolation (args:(Vec<f32>, Vec<usize>)) ->  Result<
     let mut res_vec_shape = input_vec_shape;
     res_vec_shape[2] *= 2;
     res_vec_shape[3] *= 2;
+    Ok((res_vec, res_vec_shape))
+}
+
+pub fn scalar_timestep_embedding(timestep: f32, batch_size: usize, dim: usize) ->  Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
+    let mut scalar = ndarray::Array1::from_shape_vec([1], [timestep].to_vec()).unwrap();
+    scalar = scalar.broadcast(batch_size)
+    .unwrap().
+    to_owned(); // timestep -> tensor[timestep,..., timestep] 1D 
+    let half_dim = (dim / 2) as f32;
+    let mut exponent_arr = ndarray::Array1::from_iter(ndarray::range(0., half_dim, 1.));
+    exponent_arr = exponent_arr * ( - f32::ln( 10000.0));
+    exponent_arr = exponent_arr / (half_dim - 1.);
+
+    for i in 0..exponent_arr.len() {
+        exponent_arr[i] = f32::exp(exponent_arr[i]);
+    }
+    
+    let timesteps_2d = scalar.insert_axis(ndarray::Axis(1));
+    let emb_2d = exponent_arr.insert_axis(ndarray::Axis(0));
+    let emb = timesteps_2d * emb_2d;
+    let mut emb_sin = emb.clone();
+    let mut emb_cos = emb;
+    for batch in 0..emb_sin.shape()[0] {
+        for i in 0..emb_sin.shape()[1] {
+            emb_sin[(batch, i)] = f32::sin(emb_sin[(batch, i)]);
+            emb_cos[(batch, i)] = f32::cos(emb_cos[(batch, i)]);
+        }
+    }
+
+    let result = ndarray::concatenate
+    (ndarray::Axis(1), &[emb_cos.view(), emb_sin.view()])
+    .unwrap();
+    let mut res_vec_shape = result.shape().to_vec();
+    if res_vec_shape.len() == 2 {
+        res_vec_shape.insert(0, 1);
+        res_vec_shape.insert(0, 1);
+    }
+    let res_vec = result.as_standard_layout()
+    .to_owned()
+    .into_raw_vec_and_offset().0;
     Ok((res_vec, res_vec_shape))
 }

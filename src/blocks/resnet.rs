@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use crate::layers::{
     params::Resnet2d_params,
     norm::GroupNorm,
@@ -10,8 +13,7 @@ use crate::func::functions::{input};
 pub struct Resnet2d {
     pub if_shortcut:bool,
     pub operations: Vec<Box<dyn Layer>>,
-    pub time_emb : Vec<f32>,
-    pub time_emb_shape : Vec<usize>,
+    pub time_emb : Rc<RefCell<(Vec<f32>, Vec<usize>)>>
 }
 
 impl Resnet2d {
@@ -30,7 +32,7 @@ impl Resnet2d {
             if params.is_shortcut {
                 layer_vec.push(Box::new(Conv2d {in_channels : params.in_channels_short, out_channels : params.out_channels_short, stride: params.stride_short, padding : params.padding_short, kernel_size : params.kernel_size_short, kernel_weights : params.kernel_weights_short}));
             }
-            Self { if_shortcut: params.is_shortcut, operations: layer_vec, time_emb : params.time_emb, time_emb_shape : params.time_emb_shape}
+            Self { if_shortcut: params.is_shortcut, operations: layer_vec, time_emb : params.time_emb}
     }   
 }
 impl Layer for Resnet2d {
@@ -39,7 +41,8 @@ impl Layer for Resnet2d {
         let mut res_shape_vec = args.1.clone();
         for i in 0..self.operations.len()-(self.if_shortcut as usize) {
             if i == 3 {
-                let act_lin_res = self.operations[i].operation((self.time_emb.clone(), self.time_emb_shape.clone()))?;
+                let (time_emb, time_emb_shape) = self.time_emb.borrow().to_owned();
+                let act_lin_res = self.operations[i].operation((time_emb, time_emb_shape))?;
                 let lin_res = self.operations[i + 1].operation((act_lin_res.0, act_lin_res.1))?;
                 let mut curr_tensor = ndarray::Array4::from_shape_vec((res_shape_vec[0],res_shape_vec[1],res_shape_vec[2],res_shape_vec[3]), res_vec.clone())?;
                 let time_tensor = ndarray::Array4::from_shape_vec((lin_res.1[2], lin_res.1[3], 1, 1), lin_res.0)?;
@@ -90,7 +93,7 @@ fn test_resnet_no_shortcut_no_bias() {
         in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2 : 1, kernel_size_2 : 3, kernel_weights_2: conv2_vec.to_vec(),
         is_shortcut: false,
         in_channels_short: 320, out_channels_short: 320, padding_short: 1, stride_short : 1, kernel_size_short : 3, kernel_weights_short: conv2_vec.to_vec(),
-        time_emb: temb_vec.to_vec(), time_emb_shape: temb_vec_shape.to_vec()
+        time_emb: Rc::new(RefCell::new((temb_vec.to_vec(), temb_vec_shape)))
     };
     let resnet = Resnet2d::Resnet2d_constr(params);
     let (res_vec, res_vec_shape) = resnet.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
@@ -121,7 +124,7 @@ fn test_resnet_shortcut_no_bias() {
         in_channels_2: 640, out_channels_2: 640, padding_2: 1, stride_2 : 1, kernel_size_2 : 3, kernel_weights_2: conv2_vec.to_vec(),
         is_shortcut: true,
         in_channels_short: 320, out_channels_short: 640, padding_short: 0, stride_short : 1, kernel_size_short : 1, kernel_weights_short: conv_short_vec.to_vec(),
-        time_emb: temb_vec.to_vec(), time_emb_shape: temb_vec_shape.to_vec()
+        time_emb: Rc::new(RefCell::new((temb_vec.to_vec(), temb_vec_shape)))
     };
     let resnet = Resnet2d::Resnet2d_constr(params);
     let (res_vec, res_vec_shape) = resnet.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
