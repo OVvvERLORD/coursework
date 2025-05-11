@@ -185,162 +185,509 @@ unet = diffusers.UNet2DConditionModel.from_pretrained("stabilityai/stable-diffus
 # temb = torch.rand(2, 1280)
 # # save_file({"test_image": test_image}, r"C:\study\coursework\src\trash\test_resnet_test_image.safetensors")
 # # save_file({"test_image": temb}, r"C:\study\coursework\src\trash\test_resnet_temb.safetensors")
-# resnet_list = []
-# upsample2d_list = []
-# downsample2d_list = []
-# crossattnupblock_list = []
-# for i, down_block in enumerate(unet.down_blocks):
-#     # print(f"Down Block {i}:")
-#     for j, resnet in enumerate(down_block.resnets):
-#         # print(f"  ResNet Layer {j}: {resnet}")
-#         resnet_list.append(resnet)
-#     for k, down_block_deeper in enumerate(down_block.named_children()):
-#         if down_block_deeper[0] == 'downsamplers':
-#             for r, downsample2d in enumerate(down_block_deeper[1].named_children()):
-#                 downsample2d_list.append(downsample2d[1])
-#     if i == 0:
-#         downblock2d = down_block
-#         # print(down_block)
-# for i, up_block in enumerate(unet.up_blocks):
-#     for j, resnet in enumerate(up_block.resnets):
-#         resnet_list.append(resnet)
-#     for j, block in enumerate(up_block.named_children()):
-#         if block[0] == 'upsamplers':
-#             for k, smth in enumerate(block[1].named_children()):
-#                 upsample2d_list.append(smth[1])
-#                 upsample2d = smth[1]
-#     if i == 2:
-#         upblock2d = up_block
-#     else:
-#         crossattnupblock_list.append(up_block)
-#     # print(up_block)
-# for resnet in unet.mid_block.resnets:
-#      resnet_list.append(resnet)
-# for i, block in enumerate(unet.mid_block.named_children()):
-#     if i == 0:
-#         for j, attn in enumerate(block[1].named_children()):
-#             trans2d = attn[1]
-#             for k, trans in enumerate(attn[1].named_children()):
-                
-#                 if k == 2: # basic transformer blocks
-#                     for r, btb in enumerate(trans[1].named_children()):
-#                         if r == 3:
-#                             for q, btb_layer in enumerate(btb[1].named_children()):
-#                                 if btb_layer[0] == "attn1":
-#                                     attn1 = btb_layer[1]
-## up blocks testings
-up_blocks = unet.up_blocks
-for i, block in enumerate(up_blocks):
+resnet_list = []
+upsample2d_list = []
+downsample2d_list = []
+crossattnupblock_list = []
+for i, down_block in enumerate(unet.down_blocks):
+    # print(f"Down Block {i}:")
+    for j, resnet in enumerate(down_block.resnets):
+        # print(f"  ResNet Layer {j}: {resnet}")
+        resnet_list.append(resnet)
+    for k, down_block_deeper in enumerate(down_block.named_children()):
+        if down_block_deeper[0] == 'downsamplers':
+            for r, downsample2d in enumerate(down_block_deeper[1].named_children()):
+                downsample2d_list.append(downsample2d[1])
+    if i == 0:
+        downblock2d = down_block
+        # print(down_block)
+for i, up_block in enumerate(unet.up_blocks):
+    for j, resnet in enumerate(up_block.resnets):
+        resnet_list.append(resnet)
+    for j, block in enumerate(up_block.named_children()):
+        if block[0] == 'upsamplers':
+            for k, smth in enumerate(block[1].named_children()):
+                upsample2d_list.append(smth[1])
+                upsample2d = smth[1]
     if i == 2:
-        for j, y in enumerate(block.resnets):
-            y.norm1.weight = None
-            y.norm2.weight = None
-            y.norm1.bias = None
-            y.norm2.bias = None
-            y.norm1.affine = False
-            y.norm2.affine = False
-            y.conv1.bias = None
-            y.conv2.bias = None
-            y.conv_shortcut.bias = None
-            save_file({"conv1_weight" : y.conv1.weight},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_conv1_weight.safetensors")
-            save_file({"conv2_weight" : y.conv2.weight},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_conv2_weight.safetensors")
-            save_file({"linear_proj" : y.time_emb_proj.weight},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_linear_weight.safetensors")
-            save_file({"linear_proj" : y.time_emb_proj.bias},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_linear_bias.safetensors")
-            save_file({"conv_short_weight" : y.conv_shortcut.weight},   fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_conv_short_weight.safetensors")
+        upblock2d = up_block
     else:
-        for j, y in enumerate(block.resnets):
-            y.norm1.weight = None
-            y.norm2.weight = None
-            y.norm1.bias = None
-            y.norm2.bias = None
-            y.norm1.affine = False
-            y.norm2.affine = False
-            y.conv1.bias = None
-            y.conv2.bias = None
-            y.conv_shortcut.bias = None
-            save_file({"res_conv1": y.conv1.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_conv1.safetensors")
-            save_file({"res_conv2": y.conv2.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_conv2.safetensors")
-            save_file({"res_conv_short": y.conv_shortcut.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_conv_short.safetensors")
-            save_file({"res_lin" : y.time_emb_proj.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_temb_w.safetensors")
-            save_file({"res_lin" : y.time_emb_proj.bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_temb_b.safetensors")
-        for j, y in enumerate(block.attentions):
-            # for g, x in enumerate(y.transformer_blocks):
-            #     print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
-            save_file({"in" : y.proj_in.weight} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projin_w_test.safetensors")
-            save_file({"in" : y.proj_in.bias} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projin_b_test.safetensors")
-            save_file({"out" : y.proj_out.weight} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projout_w_test.safetensors")
-            save_file({"out" : y.proj_out.bias} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projout_b_test.safetensors")
-            y.norm.affine = False
-            y.norm.weight = None
-            y.norm.bias = None
-            k=0
-            for x in y.transformer_blocks:
-                # print(x.num_attention_heads)
-                x.norm1.bias = None
-                x.norm1.weight = None
-                x.norm1.elementwise_affine = False
-                x.norm2.bias = None
-                x.norm2.weight = None
-                x.norm2.elementwise_affine = False
-                x.norm3.bias = None
-                x.norm3.weight = None
-                x.norm3.elementwise_affine = False
-                save_file({"q" : x.attn1.to_q.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_q_test.safetensors")
-                save_file({"k" : x.attn1.to_k.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_k_test.safetensors")
-                save_file({"v" : x.attn1.to_v.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_v_test.safetensors")
-                save_file({"out" : x.attn1.to_out[0].weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_out_w_test.safetensors")
-                save_file({"out" : x.attn1.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_out_b_test.safetensors")
+        crossattnupblock_list.append(up_block)
+    # print(up_block)
+for resnet in unet.mid_block.resnets:
+     resnet_list.append(resnet)
+for i, block in enumerate(unet.mid_block.named_children()):
+    if i == 0:
+        for j, attn in enumerate(block[1].named_children()):
+            trans2d = attn[1]
+            for k, trans in enumerate(attn[1].named_children()):
                 
-                save_file({"q" : x.attn2.to_q.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_q_test.safetensors")
-                save_file({"k" : x.attn2.to_k.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_k_test.safetensors")
-                save_file({"v" : x.attn2.to_v.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_v_test.safetensors")
-                save_file({"out" : x.attn2.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_out_w_test.safetensors")
-                save_file({"out" : x.attn2.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_out_b_test.safetensors")
+                if k == 2: # basic transformer blocks
+                    for r, btb in enumerate(trans[1].named_children()):
+                        if r == 3:
+                            lnorm = btb[1].norm1
+                            for q, btb_layer in enumerate(btb[1].named_children()):
+                                if btb_layer[0] == "attn1":
+                                    attn1 = btb_layer[1]
 
-                for g, y in enumerate(x.ff.net.named_children()):
-                    if y[0] == '0':
-                        save_file({"proj" : y[1].proj.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_geglu_w_test.safetensors")
-                        save_file({"proj" : y[1].proj.bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_geglu_b_test.safetensors")
-                    elif y[0] == '2':
-                        save_file({"ff" : y[1].weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_ff_w_test.safetensors")
-                        save_file({"ff" : y[1].bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_ff_b_test.safetensors")
-                k += 1
+# print(unet.conv_norm_out)
+# norm_b = unet.conv_norm_out
+# save_file({"norm": norm_b.weight}, r"C:\study\coursework\src\trash\test_grnorm_bias_w.safetensors")
+# save_file({"norm": norm_b.bias}, r"C:\study\coursework\src\trash\test_grnorm_bias_b.safetensors")
 
-        for r, g in enumerate(block.upsamplers.named_children()):
-            g[1].conv.bias = None
-            save_file({"upsample" :  g[1].conv.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_upsample.safetensors")
+# grnorm_input = torch.rand(2, 320, 128, 128)
+# save_file({"norm": grnorm_input}, r"C:\study\coursework\src\trash\test_grnorm_bias_i.safetensors")
+# save_file({"norm": norm_b(grnorm_input)}, r"C:\study\coursework\src\trash\test_grnorm_bias_r.safetensors")
+
+# print(norm_b(grnorm_input))
 
 
+# print(lnorm.weight.shape, lnorm.bias.shape)
+# print(lnorm)
+# save_file({"norm": lnorm.weight}, r"C:\study\coursework\src\trash\test_lnorm_bias_w.safetensors")
+# save_file({"norm": lnorm.bias}, r"C:\study\coursework\src\trash\test_lnorm_bias_b.safetensors")
 
-upblocks_input = torch.rand(2, 1280, 8, 8)
-upblocks_temb = torch.rand(2, 1280)
-upblocks_encoder = torch.rand(2, 1280, 2048)
+# lnorm_input = torch.rand(2, 64, 64, 1280)
+# save_file({"norm": lnorm_input}, r"C:\study\coursework\src\trash\test_lnorm_bias_i.safetensors")
+# save_file({"norm": lnorm(lnorm_input)}, r"C:\study\coursework\src\trash\test_lnorm_bias_r.safetensors")
 
-for_res_hidden_input = torch.rand(2, 320, 32, 32)
-for_res_hidden_tuple = (for_res_hidden_input, )
-for x in unet.down_blocks:
-    for_res_hidden_input, res_samples = x(for_res_hidden_input, temb = upblocks_temb , encoder_hidden_states = upblocks_encoder)
-    for_res_hidden_tuple += res_samples
+# print(lnorm(lnorm_input))
 
-for i, x in enumerate(for_res_hidden_tuple):
-    save_file({"input" : x}, fr"C:\study\coursework\src\trash\test_upblocks_res_hidden{i}.safetensors")
-print(len(for_res_hidden_tuple))
-upblocks_input = unet.mid_block(for_res_hidden_input, temb = upblocks_temb, encoder_hidden_states = upblocks_encoder)
-output = upblocks_input
 
-for x in up_blocks:
-    res_hidden_states = for_res_hidden_tuple[-3 :]
-    for_res_hidden_tuple = for_res_hidden_tuple[ : -3]
-    output = x(output, res_hidden_states_tuple=res_hidden_states, temb=upblocks_temb, encoder_hidden_states=upblocks_encoder)
 
-# print(output.shape)
-save_file({"input" : upblocks_temb}, r"C:\study\coursework\src\trash\test_upblocks_temb.safetensors")
-save_file({"input" : upblocks_encoder}, r"C:\study\coursework\src\trash\test_upblocks_encoder.safetensors")
-save_file({"input" : upblocks_input}, r"C:\study\coursework\src\trash\test_upblocks_input.safetensors")
 
-print(output)
-save_file({"output" : output}, r"C:\study\coursework\src\trash\test_upblocks_output.safetensors")
-# print(up_blocks)
+
+
+
+
+
+# print(unet)
+
+
+
+
+
+
+## unet synth testings
+## для удобства поставить None в .config.addition_embed_type
+
+# unet.config.addition_embed_type = None
+# # print(unet.time_proj)
+# unet_encoder = torch.rand(2, 1280, 2048)
+# unet_input = torch.rand(2, 4, 8, 8)
+# save_file({"input" : unet_input}, r"C:\study\coursework\src\trash\test_unet_input.safetensors")
+# save_file({"input" : unet_encoder}, r"C:\study\coursework\src\trash\test_unet_encoder.safetensors")
+# save_file({"input" : unet.time_embedding.linear_1.weight}, r"C:\study\coursework\src\trash\test_unet_temb_l1_w.safetensors")
+# save_file({"input" : unet.time_embedding.linear_1.bias}, r"C:\study\coursework\src\trash\test_unet_temb_l1_b.safetensors")
+# save_file({"input" : unet.time_embedding.linear_2.weight}, r"C:\study\coursework\src\trash\test_unet_temb_l2_w.safetensors")
+# save_file({"input" : unet.time_embedding.linear_2.bias}, r"C:\study\coursework\src\trash\test_unet_temb_l2_b.safetensors")
+# # output = unet(unet_input,  timestep = 0, encoder_hidden_states = unet_encoder)
+# # print(output[0].shape)
+# # hand_temb = unet.get_time_embed(sample=unet_input, timestep=0)
+# # hand_temb = unet.time_embedding(hand_temb)
+# # save_file({"output" : hand_temb}, r"C:\study\coursework\src\trash\test_unet_temb_output.safetensors")
+# # print(hand_temb, hand_temb.shape)
+
+
+# for i, block in enumerate(unet.up_blocks):
+#     if i == 2:
+#         for j, y in enumerate(block.resnets):
+#             y.norm1.weight = None
+#             y.norm2.weight = None
+#             y.norm1.bias = None
+#             y.norm2.bias = None
+#             y.norm1.affine = False
+#             y.norm2.affine = False
+#             y.conv1.bias = None
+#             y.conv2.bias = None
+#             y.conv_shortcut.bias = None
+#             save_file({"conv1_weight" : y.conv1.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_upblock2d_res{j}_conv1_weight.safetensors")
+#             save_file({"conv2_weight" : y.conv2.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_upblock2d_res{j}_conv2_weight.safetensors")
+#             save_file({"linear_proj" : y.time_emb_proj.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_upblock2d_res{j}_linear_weight.safetensors")
+#             save_file({"linear_proj" : y.time_emb_proj.bias},  fr"C:\study\coursework\src\trash\test_unet_upblocks_upblock2d_res{j}_linear_bias.safetensors")
+#             save_file({"conv_short_weight" : y.conv_shortcut.weight},   fr"C:\study\coursework\src\trash\test_unet_upblocks_upblock2d_res{j}_conv_short_weight.safetensors")
+#     else:
+#         for j, y in enumerate(block.resnets):
+#             y.norm1.weight = None
+#             y.norm2.weight = None
+#             y.norm1.bias = None
+#             y.norm2.bias = None
+#             y.norm1.affine = False
+#             y.norm2.affine = False
+#             y.conv1.bias = None
+#             y.conv2.bias = None
+#             y.conv_shortcut.bias = None
+#             save_file({"res_conv1": y.conv1.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_resnet{j}_conv1.safetensors")
+#             save_file({"res_conv2": y.conv2.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_resnet{j}_conv2.safetensors")
+#             save_file({"res_conv_short": y.conv_shortcut.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_resnet{j}_conv_short.safetensors")
+#             save_file({"res_lin" : y.time_emb_proj.weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_resnet{j}_temb_w.safetensors")
+#             save_file({"res_lin" : y.time_emb_proj.bias}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_resnet{j}_temb_b.safetensors")
+#         for j, y in enumerate(block.attentions):
+#             # for g, x in enumerate(y.transformer_blocks):
+#             #     print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
+#             save_file({"in" : y.proj_in.weight} , fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_projin_w_test.safetensors")
+#             save_file({"in" : y.proj_in.bias} , fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_projin_b_test.safetensors")
+#             save_file({"out" : y.proj_out.weight} , fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_projout_w_test.safetensors")
+#             save_file({"out" : y.proj_out.bias} , fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_projout_b_test.safetensors")
+#             y.norm.affine = False
+#             y.norm.weight = None
+#             y.norm.bias = None
+#             k=0
+#             for x in y.transformer_blocks:
+#                 # print(x.num_attention_heads)
+#                 x.norm1.bias = None
+#                 x.norm1.weight = None
+#                 x.norm1.elementwise_affine = False
+#                 x.norm2.bias = None
+#                 x.norm2.weight = None
+#                 x.norm2.elementwise_affine = False
+#                 x.norm3.bias = None
+#                 x.norm3.weight = None
+#                 x.norm3.elementwise_affine = False
+#                 save_file({"q" : x.attn1.to_q.weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_q_test.safetensors")
+#                 save_file({"k" : x.attn1.to_k.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_k_test.safetensors")
+#                 save_file({"v" : x.attn1.to_v.weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_v_test.safetensors")
+#                 save_file({"out" : x.attn1.to_out[0].weight},  fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_out_w_test.safetensors")
+#                 save_file({"out" : x.attn1.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_out_b_test.safetensors")
+                
+#                 save_file({"q" : x.attn2.to_q.weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_q_test.safetensors")
+#                 save_file({"k" : x.attn2.to_k.weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_k_test.safetensors")
+#                 save_file({"v" : x.attn2.to_v.weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_v_test.safetensors")
+#                 save_file({"out" : x.attn2.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_out_w_test.safetensors")
+#                 save_file({"out" : x.attn2.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_out_b_test.safetensors")
+
+#                 for g, y in enumerate(x.ff.net.named_children()):
+#                     if y[0] == '0':
+#                         save_file({"proj" : y[1].proj.weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_geglu_w_test.safetensors")
+#                         save_file({"proj" : y[1].proj.bias}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_geglu_b_test.safetensors")
+#                     elif y[0] == '2':
+#                         save_file({"ff" : y[1].weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_ff_w_test.safetensors")
+#                         save_file({"ff" : y[1].bias}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_trans{j}_btb{k}_ff_b_test.safetensors")
+#                 k += 1
+
+#         for r, g in enumerate(block.upsamplers.named_children()):
+#             g[1].conv.bias = None
+#             save_file({"upsample" :  g[1].conv.weight}, fr"C:\study\coursework\src\trash\test_unet_upblocks_crossattnupblock{i}_upsample.safetensors")
+
+
+
+# for i, x in enumerate(unet.mid_block.resnets):
+#     x.norm1.weight = None
+#     x.norm2.weight = None
+#     x.norm1.bias = None
+#     x.norm2.bias = None
+#     x.norm1.affine = False
+#     x.norm2.affine = False
+#     x.conv1.bias = None
+#     x.conv2.bias = None
+#     save_file({"res_conv1": x.conv1.weight},  fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_resnet{i}_conv1.safetensors")
+#     save_file({"res_conv2": x.conv2.weight},  fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_resnet{i}_conv2.safetensors")
+#     save_file({"res_lin" : x.time_emb_proj.weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_resnet{i}_temb_w.safetensors")
+#     save_file({"res_lin" : x.time_emb_proj.bias}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_resnet{i}_temb_b.safetensors")
+
+# # for j, x in enumerate(y.transformer_blocks):
+# #     print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
+# save_file({"in" : unet.mid_block.attentions[0].proj_in.weight} , r"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_projin_w_test.safetensors")
+# save_file({"in" : unet.mid_block.attentions[0].proj_in.bias} , r"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_projin_b_test.safetensors")
+# save_file({"out" : unet.mid_block.attentions[0].proj_out.weight} , r"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_projout_w_test.safetensors")
+# save_file({"out" :unet. mid_block.attentions[0].proj_out.bias} , r"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_projout_b_test.safetensors")
+# unet.mid_block.attentions[0].norm.affine = False
+# unet.mid_block.attentions[0].norm.affine = False
+# unet.mid_block.attentions[0].norm.weight = None
+# unet.mid_block.attentions[0].norm.bias = None
+# k=0
+# for x in unet.mid_block.attentions[0].transformer_blocks:
+#     # print(x.num_attention_heads)
+#     x.norm1.bias = None
+#     x.norm1.weight = None
+#     x.norm1.elementwise_affine = False
+#     x.norm2.bias = None
+#     x.norm2.weight = None
+#     x.norm2.elementwise_affine = False
+#     x.norm3.bias = None
+#     x.norm3.weight = None
+#     x.norm3.elementwise_affine = False
+#     save_file({"q" : x.attn1.to_q.weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn1_q_test.safetensors")
+#     save_file({"k" : x.attn1.to_k.weight},  fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn1_k_test.safetensors")
+#     save_file({"v" : x.attn1.to_v.weight},  fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn1_v_test.safetensors")
+#     save_file({"out" : x.attn1.to_out[0].weight},  fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn1_out_w_test.safetensors")
+#     save_file({"out" : x.attn1.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn1_out_b_test.safetensors")
+    
+#     save_file({"q" : x.attn2.to_q.weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn2_q_test.safetensors")
+#     save_file({"k" : x.attn2.to_k.weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn2_k_test.safetensors")
+#     save_file({"v" : x.attn2.to_v.weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn2_v_test.safetensors")
+#     save_file({"out" : x.attn2.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn2_out_w_test.safetensors")
+#     save_file({"out" : x.attn2.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_attn2_out_b_test.safetensors")
+
+#     for g, y in enumerate(x.ff.net.named_children()):
+#         if y[0] == '0':
+#             save_file({"proj" : y[1].proj.weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_geglu_w_test.safetensors")
+#             save_file({"proj" : y[1].proj.bias}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_geglu_b_test.safetensors")
+#         elif y[0] == '2':
+#             save_file({"ff" : y[1].weight}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_ff_w_test.safetensors")
+#             save_file({"ff" : y[1].bias}, fr"C:\study\coursework\src\trash\test_unet_crossattnmidblock_trans_btb{k}_ff_b_test.safetensors")
+#     k += 1
+
+
+
+# for i, block in enumerate(unet.down_blocks.named_children()):
+#     if i == 0: 
+#         for j, x in enumerate(block[1].resnets):
+#             x.norm1.affine = False
+#             x.norm1.weight = None
+#             x.norm2.weight = None
+#             x.norm1.bias = None
+#             x.norm2.bias = None
+#             x.norm2.affine = False
+#             x.conv1.bias = None
+#             x.conv2.bias = None
+#             save_file({"conv1_weight" : x.conv1.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_downblock2d_res{j}_conv1_weight.safetensors")
+#             save_file({"conv2_weight" : x.conv2.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_downblock2d_res{j}_conv2_weight.safetensors")
+#             save_file({"linear_proj" : x.time_emb_proj.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_downblock2d_res{j}_linear_weight.safetensors")
+#             save_file({"linear_proj" : x.time_emb_proj.bias},  fr"C:\study\coursework\src\trash\test_unet_downblocks_downblock2d_res{j}_linear_bias.safetensors")
+
+#         block[1].downsamplers[0].conv.bias = None
+#         save_file({"downsample" : block[1].downsamplers[0].conv.weight}, r"C:\study\coursework\src\trash\test_unet_downblocks_downblock2d_downsample.safetensors")
+        
+#     else:
+#         for j, x in enumerate(block[1].resnets):
+#             x.norm1.weight = None
+#             x.norm2.weight = None
+#             x.norm1.bias = None
+#             x.norm2.bias = None
+#             x.norm1.affine = False
+#             x.norm2.affine = False
+#             x.conv1.bias = None
+#             x.conv2.bias = None
+#             if j == 0:
+#                 x.conv_shortcut.bias = None
+#                 save_file({"res_conv1": x.conv_shortcut.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_resnet{j}_conv_short.safetensors")
+#             save_file({"res_conv1": x.conv1.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_resnet{j}_conv1.safetensors")
+#             save_file({"res_conv2": x.conv2.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_resnet{j}_conv2.safetensors")
+#             save_file({"res_lin" : x.time_emb_proj.weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_resnet{j}_temb_w.safetensors")
+#             save_file({"res_lin" : x.time_emb_proj.bias}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_resnet{j}_temb_b.safetensors")
+
+#         for j, y in enumerate(block[1].attentions):
+#             # for k, x in enumerate(y.transformer_blocks):
+#             #     print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
+
+#             save_file({"in" : y.proj_in.weight} , fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_projin_w_test.safetensors")
+#             save_file({"in" : y.proj_in.bias} , fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_projin_b_test.safetensors")
+#             save_file({"out" : y.proj_out.weight} , fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_projout_w_test.safetensors")
+#             save_file({"out" : y.proj_out.bias} , fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_projout_b_test.safetensors")
+#             y.norm.affine = False
+#             y.norm.weight = None
+#             y.norm.bias = None
+#             k=0
+#             for x in y.transformer_blocks:
+#                 # print(x.num_attention_heads)
+#                 x.norm1.bias = None
+#                 x.norm1.weight = None
+#                 x.norm1.elementwise_affine = False
+#                 x.norm2.bias = None
+#                 x.norm2.weight = None
+#                 x.norm2.elementwise_affine = False
+#                 x.norm3.bias = None
+#                 x.norm3.weight = None
+#                 x.norm3.elementwise_affine = False
+#                 save_file({"q" : x.attn1.to_q.weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn1_q_test.safetensors")
+#                 save_file({"k" : x.attn1.to_k.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn1_k_test.safetensors")
+#                 save_file({"v" : x.attn1.to_v.weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn1_v_test.safetensors")
+#                 save_file({"out" : x.attn1.to_out[0].weight},  fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn1_out_w_test.safetensors")
+#                 save_file({"out" : x.attn1.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn1_out_b_test.safetensors")
+                
+#                 save_file({"q" : x.attn2.to_q.weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn2_q_test.safetensors")
+#                 save_file({"k" : x.attn2.to_k.weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn2_k_test.safetensors")
+#                 save_file({"v" : x.attn2.to_v.weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn2_v_test.safetensors")
+#                 save_file({"out" : x.attn2.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn2_out_w_test.safetensors")
+#                 save_file({"out" : x.attn2.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_attn2_out_b_test.safetensors")
+
+#                 for g, y in enumerate(x.ff.net.named_children()):
+#                     if y[0] == '0':
+#                         save_file({"proj" : y[1].proj.weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_geglu_w_test.safetensors")
+#                         save_file({"proj" : y[1].proj.bias}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_geglu_b_test.safetensors")
+#                     elif y[0] == '2':
+#                         save_file({"ff" : y[1].weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_ff_w_test.safetensors")
+#                         save_file({"ff" : y[1].bias}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_trans{j}_btb{k}_ff_b_test.safetensors")
+#                 k += 1
+
+#         if i == 1:
+#             for r, x in enumerate(block[1].downsamplers.named_children()):
+#                 x[1].conv.bias = None
+#                 save_file({"downsample" :  x[1].conv.weight}, fr"C:\study\coursework\src\trash\test_unet_downblocks_crossattndownblock{i}_downsample.safetensors")
+
+
+
+# unet.conv_in.bias = None
+# save_file({"conv" : unet.conv_in.weight}, r"C:\study\coursework\src\trash\test_unet_conv_in.safetensors")
+# unet.conv_norm_out.affine = False
+# unet.conv_norm_out.bias = None
+# unet.conv_norm_out.weight = None
+# unet.conv_out.bias = None
+# save_file({"conv" : unet.conv_out.weight}, r"C:\study\coursework\src\trash\test_unet_conv_out.safetensors")
+
+# # print(unet)
+
+
+# output = unet(unet_input,  timestep = 2, encoder_hidden_states = unet_encoder)
+# print(output[0], output[0].shape)
+# save_file({"output" : output[0]}, r"C:\study\coursework\src\trash\test_unet_output.safetensors")
+
+
+
+# hand_temb = unet.get_time_embed(sample=unet_input, timestep=0)
+# hand_temb = unet.time_embedding(hand_temb)
+# print(hand_temb)
+# # sample = unet.conv_in(unet_input)
+# # all_res = ()
+# # for x in unet.down_blocks:
+# #     sample, res_samples = x(sample, temb = hand_temb, encoder_hidden_states = unet_encoder)
+# #     all_res += res_samples
+# # print(sample, sample.shape)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## up blocks testings
+# up_blocks = unet.up_blocks
+# for i, block in enumerate(up_blocks):
+#     if i == 2:
+#         for j, y in enumerate(block.resnets):
+#             y.norm1.weight = None
+#             y.norm2.weight = None
+#             y.norm1.bias = None
+#             y.norm2.bias = None
+#             y.norm1.affine = False
+#             y.norm2.affine = False
+#             y.conv1.bias = None
+#             y.conv2.bias = None
+#             y.conv_shortcut.bias = None
+#             save_file({"conv1_weight" : y.conv1.weight},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_conv1_weight.safetensors")
+#             save_file({"conv2_weight" : y.conv2.weight},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_conv2_weight.safetensors")
+#             save_file({"linear_proj" : y.time_emb_proj.weight},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_linear_weight.safetensors")
+#             save_file({"linear_proj" : y.time_emb_proj.bias},  fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_linear_bias.safetensors")
+#             save_file({"conv_short_weight" : y.conv_shortcut.weight},   fr"C:\study\coursework\src\trash\test_upblocks_upblock2d_res{j}_conv_short_weight.safetensors")
+#     else:
+#         for j, y in enumerate(block.resnets):
+#             y.norm1.weight = None
+#             y.norm2.weight = None
+#             y.norm1.bias = None
+#             y.norm2.bias = None
+#             y.norm1.affine = False
+#             y.norm2.affine = False
+#             y.conv1.bias = None
+#             y.conv2.bias = None
+#             y.conv_shortcut.bias = None
+#             save_file({"res_conv1": y.conv1.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_conv1.safetensors")
+#             save_file({"res_conv2": y.conv2.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_conv2.safetensors")
+#             save_file({"res_conv_short": y.conv_shortcut.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_conv_short.safetensors")
+#             save_file({"res_lin" : y.time_emb_proj.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_temb_w.safetensors")
+#             save_file({"res_lin" : y.time_emb_proj.bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_resnet{j}_temb_b.safetensors")
+#         for j, y in enumerate(block.attentions):
+#             # for g, x in enumerate(y.transformer_blocks):
+#             #     print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
+#             save_file({"in" : y.proj_in.weight} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projin_w_test.safetensors")
+#             save_file({"in" : y.proj_in.bias} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projin_b_test.safetensors")
+#             save_file({"out" : y.proj_out.weight} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projout_w_test.safetensors")
+#             save_file({"out" : y.proj_out.bias} , fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_projout_b_test.safetensors")
+#             y.norm.affine = False
+#             y.norm.weight = None
+#             y.norm.bias = None
+#             k=0
+#             for x in y.transformer_blocks:
+#                 # print(x.num_attention_heads)
+#                 x.norm1.bias = None
+#                 x.norm1.weight = None
+#                 x.norm1.elementwise_affine = False
+#                 x.norm2.bias = None
+#                 x.norm2.weight = None
+#                 x.norm2.elementwise_affine = False
+#                 x.norm3.bias = None
+#                 x.norm3.weight = None
+#                 x.norm3.elementwise_affine = False
+#                 save_file({"q" : x.attn1.to_q.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_q_test.safetensors")
+#                 save_file({"k" : x.attn1.to_k.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_k_test.safetensors")
+#                 save_file({"v" : x.attn1.to_v.weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_v_test.safetensors")
+#                 save_file({"out" : x.attn1.to_out[0].weight},  fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_out_w_test.safetensors")
+#                 save_file({"out" : x.attn1.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn1_out_b_test.safetensors")
+                
+#                 save_file({"q" : x.attn2.to_q.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_q_test.safetensors")
+#                 save_file({"k" : x.attn2.to_k.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_k_test.safetensors")
+#                 save_file({"v" : x.attn2.to_v.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_v_test.safetensors")
+#                 save_file({"out" : x.attn2.to_out[0].weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_out_w_test.safetensors")
+#                 save_file({"out" : x.attn2.to_out[0].bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_attn2_out_b_test.safetensors")
+
+#                 for g, y in enumerate(x.ff.net.named_children()):
+#                     if y[0] == '0':
+#                         save_file({"proj" : y[1].proj.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_geglu_w_test.safetensors")
+#                         save_file({"proj" : y[1].proj.bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_geglu_b_test.safetensors")
+#                     elif y[0] == '2':
+#                         save_file({"ff" : y[1].weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_ff_w_test.safetensors")
+#                         save_file({"ff" : y[1].bias}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_trans{j}_btb{k}_ff_b_test.safetensors")
+#                 k += 1
+
+#         for r, g in enumerate(block.upsamplers.named_children()):
+#             g[1].conv.bias = None
+#             save_file({"upsample" :  g[1].conv.weight}, fr"C:\study\coursework\src\trash\test_upblocks_crossattnupblock{i}_upsample.safetensors")
+
+
+
+# upblocks_input = torch.rand(2, 1280, 8, 8)
+# upblocks_temb = torch.rand(2, 1280)
+# upblocks_encoder = torch.rand(2, 1280, 2048)
+
+# for_res_hidden_input = torch.rand(2, 320, 32, 32)
+# for_res_hidden_tuple = (for_res_hidden_input, )
+# for x in unet.down_blocks:
+#     for_res_hidden_input, res_samples = x(for_res_hidden_input, temb = upblocks_temb , encoder_hidden_states = upblocks_encoder)
+#     for_res_hidden_tuple += res_samples
+
+# for i, x in enumerate(for_res_hidden_tuple):
+#     save_file({"input" : x}, fr"C:\study\coursework\src\trash\test_upblocks_res_hidden{i}.safetensors")
+# print(len(for_res_hidden_tuple))
+# upblocks_input = unet.mid_block(for_res_hidden_input, temb = upblocks_temb, encoder_hidden_states = upblocks_encoder)
+# output = upblocks_input
+
+# for x in up_blocks:
+#     res_hidden_states = for_res_hidden_tuple[-3 :]
+#     for_res_hidden_tuple = for_res_hidden_tuple[ : -3]
+#     output = x(output, res_hidden_states_tuple=res_hidden_states, temb=upblocks_temb, encoder_hidden_states=upblocks_encoder)
+
+# # print(output.shape)
+# save_file({"input" : upblocks_temb}, r"C:\study\coursework\src\trash\test_upblocks_temb.safetensors")
+# save_file({"input" : upblocks_encoder}, r"C:\study\coursework\src\trash\test_upblocks_encoder.safetensors")
+# save_file({"input" : upblocks_input}, r"C:\study\coursework\src\trash\test_upblocks_input.safetensors")
+
+# print(output)
+# save_file({"output" : output}, r"C:\study\coursework\src\trash\test_upblocks_output.safetensors")
+# # print(up_blocks)
 
 
 
@@ -370,8 +717,8 @@ save_file({"output" : output}, r"C:\study\coursework\src\trash\test_upblocks_out
 #             save_file({"linear_proj" : x.time_emb_proj.weight},  fr"C:\study\coursework\src\trash\test_downblocks_downblock2d_res{j}_linear_weight.safetensors")
 #             save_file({"linear_proj" : x.time_emb_proj.bias},  fr"C:\study\coursework\src\trash\test_downblocks_downblock2d_res{j}_linear_bias.safetensors")
 
-        # block[1].downsamplers[0].conv.bias = None
-        # save_file({"downsample" : block[1].downsamplers[0].conv.weight}, r"C:\study\coursework\src\trash\test_downblocks_downblock2d_downsample.safetensors")
+#         block[1].downsamplers[0].conv.bias = None
+#         save_file({"downsample" : block[1].downsamplers[0].conv.weight}, r"C:\study\coursework\src\trash\test_downblocks_downblock2d_downsample.safetensors")
         
 #     else:
 #         for j, x in enumerate(block[1].resnets):
@@ -569,18 +916,18 @@ save_file({"output" : output}, r"C:\study\coursework\src\trash\test_upblocks_out
 ## crossattnmidblock2d testings
 # crossattnmidblock2d = unet.mid_block
 # for i, x in enumerate(crossattnmidblock2d.resnets):
-    # x.norm1.weight = None
-    # x.norm2.weight = None
-    # x.norm1.bias = None
-    # x.norm2.bias = None
-    # x.norm1.affine = False
-    # x.norm2.affine = False
-    # x.conv1.bias = None
-    # x.conv2.bias = None
-    # save_file({"res_conv1": x.conv1.weight},  fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_conv1.safetensors")
-    # save_file({"res_conv2": x.conv2.weight},  fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_conv2.safetensors")
-    # save_file({"res_lin" : x.time_emb_proj.weight}, fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_temb_w.safetensors")
-    # save_file({"res_lin" : x.time_emb_proj.bias}, fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_temb_b.safetensors")
+#     x.norm1.weight = None
+#     x.norm2.weight = None
+#     x.norm1.bias = None
+#     x.norm2.bias = None
+#     x.norm1.affine = False
+#     x.norm2.affine = False
+#     x.conv1.bias = None
+#     x.conv2.bias = None
+#     save_file({"res_conv1": x.conv1.weight},  fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_conv1.safetensors")
+#     save_file({"res_conv2": x.conv2.weight},  fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_conv2.safetensors")
+#     save_file({"res_lin" : x.time_emb_proj.weight}, fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_temb_w.safetensors")
+#     save_file({"res_lin" : x.time_emb_proj.bias}, fr"C:\study\coursework\src\trash\test_crossattnmidblock_resnet{i}_temb_b.safetensors")
 
 # # for j, x in enumerate(y.transformer_blocks):
 # #     print(x.attention_bias, x.attention_head_dim, x.dim, x.double_self_attention, x.num_attention_heads, x.num_positional_embeddings, x.only_cross_attention, x.positional_embeddings, x.pos_embed)
@@ -1161,19 +1508,24 @@ save_file({"output" : output}, r"C:\study\coursework\src\trash\test_upblocks_out
 
 ## downsample2d testings
 ## they share common input 
-# test_upsample = torch.rand(2, 640, 128, 128)
-# downsample2d_test = downsample2d_list[1]
-# downsample2d_test.conv.bias = None
-# save_file({"downsample2d_conv" : downsample2d_test.conv.weight}, r"C:\study\coursework\src\trash\test_downsample_conv.safetensors")
-# save_file({"downsample_out": downsample2d_test(test_upsample)}, r"C:\study\coursework\src\trash\test_downsample_outp.safetensors")
+test_upsample = torch.rand(2, 640, 128, 128)
+save_file({"downsample_in": test_upsample}, r"C:\study\coursework\src\trash\test_downsample_inp.safetensors")
+downsample2d_test = downsample2d_list[1]
 
-#upsample test
+save_file({"downsample2d_conv" : downsample2d_test.conv.weight}, r"C:\study\coursework\src\trash\test_downsample_conv.safetensors")
+save_file({"downsample2d_conv" : downsample2d_test.conv.bias}, r"C:\study\coursework\src\trash\test_downsample_conv_b.safetensors")
+save_file({"downsample_out": downsample2d_test(test_upsample)}, r"C:\study\coursework\src\trash\test_downsample_outp.safetensors")
+print(downsample2d)
+## upsample test
 # test_upsample = torch.rand(2, 640, 128, 128)
-# upsample2d.conv.bias = None
 # upsample2d_output = upsample2d(test_upsample)
+# print(upsample2d)
 # save_file({"upsample2d_conv" : upsample2d.conv.weight}, r"C:\study\coursework\src\trash\test_upsample_conv.safetensors")
+# save_file({"upsample2d_conv" : upsample2d.conv.bias}, r"C:\study\coursework\src\trash\test_upsample_b_conv.safetensors")
 # save_file({"upsample2d_input" : test_upsample}, r"C:\study\coursework\src\trash\test_upsample_inp.safetensors")
 # save_file({"upsample2d_output" : upsample2d_output}, r"C:\study\coursework\src\trash\test_upsample_outp.safetensors")
+# print(upsample2d.conv.bias.shape)
+
 
 ## resnet
 # print(resnet_list[0])
