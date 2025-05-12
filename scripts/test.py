@@ -153,15 +153,20 @@
 # save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_stride_python.safetensors")
 # print(res, res.shape)
 ##kernel and in < out
+# import torch
+# from safetensors.torch import save_file, load_file
+# torch.manual_seed(52)
 # conv = torch.nn.Conv2d(640, 1280, kernel_size=(1, 1), stride=(1, 1))
-# conv.bias = None
-# print(conv.weight.shape)
+# # conv.bias = None
+# # print(conv.weight.shape)
 # test_input = torch.rand(4, 640, 64, 64)
 # res = conv(test_input)
 # save_file({"input_test" : test_input}, r"C:\study\coursework\src\trash\test_conv_inp_kernel_in.safetensors")
 # save_file({"weight_test" : conv.weight}, r"C:\study\coursework\src\trash\test_conv_weight_kernel_in.safetensors")
+# save_file({"bias_test" : conv.bias}, r"C:\study\coursework\src\trash\test_conv_bias_kernel_in.safetensors")
 # save_file({"weight_test" : res}, r"C:\study\coursework\src\trash\test_conv_kernel_in_python.safetensors")
-# print(res, res.shape)
+# # print(res, res.shape)
+# print(res.shape, conv)
 ##kernel and out < in
 # conv = torch.nn.Conv2d(960, 640, kernel_size=(1, 1), stride=(1, 1))
 # conv.bias = None
@@ -1350,20 +1355,22 @@ for i, block in enumerate(unet.mid_block.named_children()):
 # # # output = attn1(attn1_test)
 # # # print(output, output.shape)
 # save_file({"attn1_test" : attn1_test}, r"C:\study\coursework\src\trash\test_attn1_test.safetensors")
-# save_file({"q" : attn1.to_q.weight}, r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors")
-# save_file({"k" : attn1.to_k.weight}, r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors")
-# save_file({"v" : attn1.to_v.weight}, r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors")
-# save_file({"out" : attn1.to_out[0].weight}, r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors")
-# save_file({"out" : attn1.to_out[0].bias}, r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors")
+print(attn1)
+save_file({"q" : attn1.to_q.weight}, r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors")
+save_file({"k" : attn1.to_k.weight}, r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors")
+save_file({"v" : attn1.to_v.weight}, r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors")
+save_file({"out" : attn1.to_out[0].weight}, r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors")
+save_file({"out" : attn1.to_out[0].bias}, r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors")
 # # # # save_file({"outp" : attn1(attn1_test)}, r"C:\study\coursework\src\trash\test_attn1_output_test.safetensors")
-# attn1_test_bchw = torch.rand(2, 1280, 16, 128)
-# save_file({"attn1_test" : attn1_test_bchw}, r"C:\study\coursework\src\trash\test_attn1_test_bchw.safetensors")
-# # save_file({"outp" : attn1(attn1_test_bchw).contiguous()}, r"C:\study\coursework\src\trash\test_attn1_output_bchw_test.safetensors")
-# encoder_tensor = torch.rand(2, 1280, 1280)
-# save_file({"attn1_test" : encoder_tensor}, r"C:\study\coursework\src\trash\test_attn1_encoder_test.safetensors")
+attn1_test_bchw = torch.rand(2, 1280, 16, 128)
+save_file({"attn1_test" : attn1_test_bchw}, r"C:\study\coursework\src\trash\test_attn1_test_bchw.safetensors")
+save_file({"outp" : attn1(attn1_test_bchw).contiguous()}, r"C:\study\coursework\src\trash\test_attn1_output_bchw_test.safetensors")
+encoder_tensor = torch.rand(2, 1280, 1280)
+save_file({"attn1_test" : encoder_tensor}, r"C:\study\coursework\src\trash\test_attn1_encoder_test.safetensors")
 # save_file({"outp" : attn1(attn1_test, encoder_hidden_states = encoder_tensor)}, r"C:\study\coursework\src\trash\test_attn1_output_encoder_test.safetensors")
-# save_file({"outp" : attn1(attn1_test_bchw, encoder_hidden_states = encoder_tensor).contiguous()}, r"C:\study\coursework\src\trash\test_attn1_output_bchw_encoder_test.safetensors")
-
+save_file({"outp" : attn1(attn1_test_bchw, encoder_hidden_states = encoder_tensor).contiguous()}, r"C:\study\coursework\src\trash\test_attn1_output_bchw_encoder_test.safetensors")
+print(attn1(attn1_test_bchw).contiguous())
+print(attn1.heads)
 ## crossattnupbloc testings
 # print(crossattnupblock_list)
 
@@ -1382,7 +1389,7 @@ for i, block in enumerate(unet.mid_block.named_children()):
 #         downsample = block[1]
 
 
-# # print(downblock2d_resnet_list)
+# # # print(downblock2d_resnet_list)
 
 
 # temb = torch.rand(2, 1280)
@@ -1393,44 +1400,49 @@ for i, block in enumerate(unet.mid_block.named_children()):
 
 
 # resnet_1 = downblock2d_resnet_list[0]
-# resnet_1.norm1.affine = False
-# resnet_1.norm1.weight = None
-# resnet_1.norm2.weight = None
-# resnet_1.norm1.bias = None
-# resnet_1.norm2.bias = None
-# resnet_1.norm2.affine = False
-# resnet_1.conv1.bias = None
-# resnet_1.conv2.bias = None
+
 # save_file({"conv1_weight" : resnet_1.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_weight.safetensors")
+# save_file({"conv1_weight" : resnet_1.conv1.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_bias.safetensors")
 # save_file({"conv2_weight" : resnet_1.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_weight.safetensors")
+# save_file({"conv1_weight" : resnet_1.conv2.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_bias.safetensors")
+
+# save_file({"conv1_weight" : resnet_1.norm1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_norm1_weight.safetensors")
+# save_file({"conv1_weight" : resnet_1.norm1.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_norm1_bias.safetensors")
+# save_file({"conv2_weight" : resnet_1.norm2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_norm2_weight.safetensors")
+# save_file({"conv1_weight" : resnet_1.norm2.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_norm2_bias.safetensors")
+
+
 # save_file({"linear_proj" : resnet_1.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_weight.safetensors")
 # save_file({"linear_proj" : resnet_1.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_bias.safetensors")
 
 # resnet_2 = downblock2d_resnet_list[1]
-# resnet_2.norm1.affine = False
-# resnet_2.norm1.weight = None
-# resnet_2.norm2.weight = None
-# resnet_2.norm1.bias = None
-# resnet_2.norm2.bias = None
-# resnet_2.norm2.affine = False
-# resnet_2.conv1.bias = None
-# resnet_2.conv2.bias = None
+
 # save_file({"conv1_weight" : resnet_2.conv1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_weight.safetensors")
+# save_file({"conv1_weight" : resnet_2.conv1.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_bias.safetensors")
 # save_file({"conv2_weight" : resnet_2.conv2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_weight.safetensors")
+# save_file({"conv1_weight" : resnet_2.conv2.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_bias.safetensors")
+
+# save_file({"conv1_weight" : resnet_2.norm1.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_norm1_weight.safetensors")
+# save_file({"conv1_weight" : resnet_2.norm1.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_norm1_bias.safetensors")
+# save_file({"conv2_weight" : resnet_2.norm2.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_norm2_weight.safetensors")
+# save_file({"conv1_weight" : resnet_2.norm2.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_norm2_bias.safetensors")
+
+
 # save_file({"linear_proj" : resnet_2.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_weight.safetensors")
 # save_file({"linear_proj" : resnet_2.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_bias.safetensors")
 
 # for i, block in enumerate(downsample.named_children()):
 #     conv_downsample = block[1]
-# conv_downsample.conv.bias = None
+
 # save_file({"conv_down_weight": conv_downsample.conv.weight}, r"C:\study\coursework\src\trash\test_downblock2d_downsample.safetensors")
+# save_file({"conv_down_weight": conv_downsample.conv.bias}, r"C:\study\coursework\src\trash\test_downblock2d_downsample_b.safetensors")
 # output = downblock2d(downblock2d_test, temb = temb)
 # save_file({"downsample2d_out": output[0]}, r"C:\study\coursework\src\trash\test_downsample2d_output.safetensors")
 
 # save_file({"downsample2d_out_hidden" : output[1][0]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden1.safetensors")
 # save_file({"downsample2d_out_hidden" : output[1][1]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden2.safetensors")
 # save_file({"downsample2d_out_hidden" : output[1][2]}, r"C:\study\coursework\src\trash\test_downsample2d_output_hidden3.safetensors")
-
+# print(output[1][0])
 
 
 
@@ -1508,14 +1520,14 @@ for i, block in enumerate(unet.mid_block.named_children()):
 
 ## downsample2d testings
 ## they share common input 
-test_upsample = torch.rand(2, 640, 128, 128)
-save_file({"downsample_in": test_upsample}, r"C:\study\coursework\src\trash\test_downsample_inp.safetensors")
-downsample2d_test = downsample2d_list[1]
+# test_upsample = torch.rand(2, 640, 128, 128)
+# save_file({"downsample_in": test_upsample}, r"C:\study\coursework\src\trash\test_downsample_inp.safetensors")
+# downsample2d_test = downsample2d_list[1]
 
-save_file({"downsample2d_conv" : downsample2d_test.conv.weight}, r"C:\study\coursework\src\trash\test_downsample_conv.safetensors")
-save_file({"downsample2d_conv" : downsample2d_test.conv.bias}, r"C:\study\coursework\src\trash\test_downsample_conv_b.safetensors")
-save_file({"downsample_out": downsample2d_test(test_upsample)}, r"C:\study\coursework\src\trash\test_downsample_outp.safetensors")
-print(downsample2d)
+# save_file({"downsample2d_conv" : downsample2d_test.conv.weight}, r"C:\study\coursework\src\trash\test_downsample_conv.safetensors")
+# save_file({"downsample2d_conv" : downsample2d_test.conv.bias}, r"C:\study\coursework\src\trash\test_downsample_conv_b.safetensors")
+# save_file({"downsample_out": downsample2d_test(test_upsample)}, r"C:\study\coursework\src\trash\test_downsample_outp.safetensors")
+# print(downsample2d)
 ## upsample test
 # test_upsample = torch.rand(2, 640, 128, 128)
 # upsample2d_output = upsample2d(test_upsample)
@@ -1533,23 +1545,26 @@ print(downsample2d)
 ## no bias no shortcut
 # testings1 = resnet_list[0]
 # # print(testings1.norm1.bias, testings1.nonlinearity, testings1.conv1, testings1.norm2, testings1.nonlinearity, testings1.conv2, testings1.conv_shortcut)
-# testings1.norm1.weight = None
-# testings1.norm2.weight = None
-# testings1.norm1.bias = None
-# testings1.norm2.bias = None
-# testings1.conv1.bias = None
-# testings1.conv2.bias = None
+# test_image = torch.rand(2, 320, 320, 320)
+# temb = torch.rand(2, 1280)
 # output = testings1(test_image, temb)
 # # for i, layer in enumerate(testings1.named_children):
 # #     print('\n\n\nThis is layer {layer}', layer)
 # save_file({"test_image": test_image}, r"C:\study\coursework\src\trash\test_resnet_test_image.safetensors")
 # save_file({"test_image": temb}, r"C:\study\coursework\src\trash\test_resnet_temb.safetensors")
 # save_file({"conv1_weight" : testings1.conv1.weight},  r"C:\study\coursework\src\trash\test_resnet_conv1_weight.safetensors")
+# save_file({"conv1_weight" : testings1.conv1.bias},  r"C:\study\coursework\src\trash\test_resnet_conv1_bias.safetensors")
+# save_file({"norm1" : testings1.norm1.weight},  r"C:\study\coursework\src\trash\test_resnet_norm1_weight.safetensors")
+# save_file({"norm1" : testings1.norm1.bias},  r"C:\study\coursework\src\trash\test_resnet_norm1_bias.safetensors")
+# save_file({"norm2" : testings1.norm2.weight},  r"C:\study\coursework\src\trash\test_resnet_norm2_weight.safetensors")
+# save_file({"norm2" : testings1.norm2.bias},  r"C:\study\coursework\src\trash\test_resnet_norm2_bias.safetensors")
 # # print(testings1.conv1.weight.shape)
 # save_file({"conv2_weight" : testings1.conv2.weight},  r"C:\study\coursework\src\trash\test_resnet_conv2_weight.safetensors")
+# save_file({"conv2_weight" : testings1.conv2.bias},  r"C:\study\coursework\src\trash\test_resnet_conv2_bias.safetensors")
 # save_file({"linear_proj" : testings1.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_resnet_linear_weight.safetensors")
 # save_file({"linear_proj" : testings1.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_resnet_linear_bias.safetensors")
-# # print(testings1.time_emb_proj, testings1.time_emb_proj.weight, testings1.time_emb_proj.bias)
+# print(testings1)
+# print(testings1.time_emb_proj, testings1.time_emb_proj.weight, testings1.time_emb_proj.bias)
 # print(testings1.named_children)
 # print(output.shape)
 # norm1 = testings1.norm1
@@ -1565,13 +1580,24 @@ print(downsample2d)
 # drop = testings1.dropout
 # conv2 = testings1.conv2
 # conv2.bias = None
-# # hand_output = conv2(drop(silu(norm2(conv1(silu(norm1(test_image))) + temb_act[:, :, None, None]))))
-# # print(hand_output)
+# hand_output = conv2(drop(silu(norm2(conv1(silu(norm1(test_image))) + temb_act[:, :, None, None]))))
+# print(hand_output)
 # print(output)
 # save_file({"resnet_no_shortcut" : output}, r"C:\study\coursework\src\trash\test_resnet_output.safetensors")
 ## no bias shorcut
-# print(resnet_list[2])
 # testings2 = resnet_list[2]
+# test_image = torch.rand(2, 320, 320, 320)
+# temb = torch.rand(2, 1280)
+# save_file({"test_image": test_image}, r"C:\study\coursework\src\trash\test_resnet_short_test_image.safetensors")
+# save_file({"test_image": temb}, r"C:\study\coursework\src\trash\test_resnet_short_temb.safetensors")
+# save_file({"conv1_weight" : testings2.conv1.weight},  r"C:\study\coursework\src\trash\test_resnet_short_conv1_weight.safetensors")
+# save_file({"conv1_weight" : testings2.conv1.bias},  r"C:\study\coursework\src\trash\test_resnet_short_conv1_bias.safetensors")
+# save_file({"conv1_weight" : testings2.conv2.weight},  r"C:\study\coursework\src\trash\test_resnet_short_conv2_weight.safetensors")
+# save_file({"conv1_weight" : testings2.conv2.bias},  r"C:\study\coursework\src\trash\test_resnet_short_conv2_bias.safetensors")
+# save_file({"norm1" : testings2.norm1.weight},  r"C:\study\coursework\src\trash\test_resnet_short_norm1_weight.safetensors")
+# save_file({"norm1" : testings2.norm1.bias},  r"C:\study\coursework\src\trash\test_resnet_short_norm1_bias.safetensors")
+# save_file({"norm2" : testings2.norm2.weight},  r"C:\study\coursework\src\trash\test_resnet_short_norm2_weight.safetensors")
+# save_file({"norm2" : testings2.norm2.bias},  r"C:\study\coursework\src\trash\test_resnet_short_norm2_bias.safetensors")
 # testings2.norm1.weight = None
 # testings2.norm2.weight = None
 # testings2.norm1.bias = None
@@ -1600,7 +1626,9 @@ print(downsample2d)
 # save_file({"linear_proj" : testings2.time_emb_proj.weight},  r"C:\study\coursework\src\trash\test_resnet_short_linear_weight.safetensors")
 # save_file({"linear_proj" : testings2.time_emb_proj.bias},  r"C:\study\coursework\src\trash\test_resnet_short_linear_bias.safetensors")
 # save_file({"conv_short_weight" : testings2.conv_shortcut.weight},   r"C:\study\coursework\src\trash\test_resnet_short_conv_short_weight.safetensors")
+# save_file({"conv_short_weight" : testings2.conv_shortcut.bias},   r"C:\study\coursework\src\trash\test_resnet_short_conv_short_bias.safetensors")
 # save_file({"resnet_shortcut": testings2(test_image, temb)},  r"C:\study\coursework\src\trash\test_resnet_short_output.safetensors")
+# print(testings2)
 # print(testings2(test_image, temb))
 
 

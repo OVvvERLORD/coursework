@@ -2,7 +2,7 @@ use crate::layers::layer::Layer;
 use cudarc::cudnn::Cudnn;
 use cudarc::driver::CudaSlice;
 use cudarc::{self, cudnn};
-// use crate::func::functions::input;
+use crate::func::functions::input;
 
 pub struct Conv2d{
     pub in_channels : usize,
@@ -124,18 +124,27 @@ impl Layer for Conv2d {
 //     }
 // }
 
-// #[test]
-// fn test_conv_kernel_in(){
-//     let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_conv_inp_kernel_in.safetensors".to_string()).unwrap();
-//     let (weight_vec, _) = input(r"C:\study\coursework\src\trash\test_conv_weight_kernel_in.safetensors".to_string()).unwrap();
-//     let conv = Conv2d {kernel_size: 1, in_channels: 640, out_channels: 1280, padding: 0, stride: 1, kernel_weights: weight_vec.to_vec()};
-//     let (res_vec, res_vec_shape) = conv.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
-//     let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_conv_kernel_in_python.safetensors".to_string()).unwrap();
-//     assert!(py_vec_shape.to_vec() == res_vec_shape);
-//     for i in 0..res_vec.len(){
-//         assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-05);
-//     }
-// }
+#[test]
+fn test_conv_kernel_in(){
+    let mut tensor = input(r"C:\study\coursework\src\trash\test_conv_inp_kernel_in.safetensors".to_string()).unwrap();
+    let kernel = input(r"C:\study\coursework\src\trash\test_conv_weight_kernel_in.safetensors".to_string()).unwrap();
+    let bias = input(r"C:\study\coursework\src\trash\test_conv_bias_kernel_in.safetensors".to_string()).unwrap();
+    let conv = Conv2d{in_channels: 640, out_channels: 1280, padding: 0, stride: 1, kernel_size: 1, kernel_weights: kernel.into_raw_vec_and_offset().0, bias: bias, is_bias: true};
+    let _ = conv.operation(&mut tensor);
+    let py_tensor = input(r"C:\study\coursework\src\trash\test_conv_kernel_in_python.safetensors".to_string()).unwrap();
+    let shape = tensor.shape();
+    print!("{:?}", shape);
+    assert!(shape == py_tensor.shape());
+    for i in 0..shape[0] {
+        for j in 0..shape[1] {
+            for r in 0..shape[2] {
+                for k in 0..shape[3] {
+                    assert!((tensor[[i, j, r, k]] - py_tensor[[i, j, r, k]]).abs() <= 1e-05);
+                }
+            }
+        }
+    }
+}
 
 // #[test]
 // fn test_conv_kernel_out(){

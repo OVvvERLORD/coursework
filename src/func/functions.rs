@@ -41,6 +41,9 @@ pub fn input (input_name: String) -> Result<ndarray::Array4<f32>, Box<dyn std::e
         input_vec = bytemuck::cast_slice(tensor.data()).to_vec();
         input_vec_shape = tensor.shape().to_vec();
     }
+    if input_vec_shape.len() == 3 {
+        input_vec_shape.insert(0, 1);
+    }
     if input_vec_shape.len() == 2 {
         input_vec_shape.insert(0, 1);
         input_vec_shape.insert(0, 1);

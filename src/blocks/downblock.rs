@@ -14,103 +14,179 @@ use std::cell::RefCell;
 
 pub struct DownBlock2D {
     pub operations : Vec<Box<dyn Layer>>,
-    pub res_hidden_tensors: Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>,
+    pub res_hidden_tensors: Rc<RefCell<Vec<ndarray::Array4<f32>>>>
 }
 
 impl DownBlock2D {
-    pub fn DownBlock2D_constr(
+    pub fn new(
         params_for_resnet1 : Resnet2d_params,
         params_for_resnet2 : Resnet2d_params,
         in_channels : usize, out_channels : usize, padding : i32, stride : i32, kernel_size : usize, kernel_weights : Vec<f32>,
-        hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>
+        bias: ndarray::Array4<f32>, is_bias: bool,
+        hidden_states : Rc<RefCell<Vec<ndarray::Array4<f32>>>>
     ) -> Self {
         let mut vec = Vec::<Box<dyn Layer>>::new();
-        let resnet1 = Resnet2d::Resnet2d_constr(params_for_resnet1);
+        let resnet1 = Resnet2d::new(params_for_resnet1);
         vec.push(Box::new(resnet1));
-        let resnet2 = Resnet2d::Resnet2d_constr(params_for_resnet2);
+        let resnet2 = Resnet2d::new(params_for_resnet2);
         vec.push(Box::new(resnet2));
-        let downsample = DownSample2D::DownSample2D_constr(in_channels, out_channels, padding, stride, kernel_size, kernel_weights);
+        let downsample = DownSample2D::new(in_channels, out_channels, padding, stride, kernel_size, kernel_weights, bias, is_bias);
         vec.push(Box::new(downsample));
         Self { operations: vec, res_hidden_tensors: hidden_states}
     }
 }
 
 impl Layer for DownBlock2D {
-    fn operation(&self, args:(Vec<f32>, Vec<usize>)) -> Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
+    fn operation(&self,  args:&mut ndarray::Array4<f32>) -> Result<(), Box<dyn std::error::Error>> {
         let operations = &self.operations;
-        let mut res_vec = args.0;
-        let mut res_vec_shape = args.1;
         let res_hidden_tensors = self.res_hidden_tensors.borrow_mut();
         let mut res_hidden_tensors = res_hidden_tensors;
         for layer in operations {
-            let (temp_vec, temp_vec_shape) = layer.operation((res_vec.clone(), res_vec_shape.clone()))?;
-            res_vec = temp_vec;
-            res_vec_shape = temp_vec_shape;
-            res_hidden_tensors.push((res_vec.clone(), res_vec_shape.clone()));
+            let _ = layer.operation(args)?;
+            res_hidden_tensors.push(args.clone());
         } 
-        Ok((res_vec, res_vec_shape))
+        Ok(())
     }
 }
 
 #[test]
-fn test_downblock2d_unbiased() {
-    let (test_vec, test_shape_vec) = input(r"C:\study\coursework\src\trash\test_downblock2d_test.safetensors".to_string()).unwrap();
-    let (temb, temb_shape) = input(r"C:\study\coursework\src\trash\test_downblock2d_temb.safetensors".to_string()).unwrap();
+fn test_downblock2d_biased() {
+    let mut tensor = input(r"C:\study\coursework\src\trash\test_downblock2d_test.safetensors".to_string()).unwrap();
+    let temb = input(r"C:\study\coursework\src\trash\test_downblock2d_temb.safetensors".to_string()).unwrap();
 
-    let (conv1_res1_vec, _) = input(r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_weight.safetensors".to_string()).unwrap();
-    let (conv2_res1_vec, _ ) = input(r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_weight.safetensors".to_string()).unwrap();
-    let (lin_res1_vec, lin_res1_vec_shape) = input(r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_weight.safetensors".to_string()).unwrap();
-    let (lin_res1_bias, lin_res1_bias_shape) = input(r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_bias.safetensors".to_string()).unwrap();
-    let (conv_down, _ ) = input(r"C:\study\coursework\src\trash\test_downblock2d_downsample.safetensors".to_string()).unwrap();
+    let r1k1= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_weight.safetensors".to_string()).unwrap();
+    let r1k2= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_weight.safetensors".to_string()).unwrap();
+    let r1c1b= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_conv1_bias.safetensors".to_string()).unwrap();
+    let r1c2b= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_conv2_bias.safetensors".to_string()).unwrap();
 
-    let time_emb = Rc::new(RefCell::new((temb.to_vec(), temb_shape.to_vec())));
+    let r1n1w= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_norm1_weight.safetensors".to_string()).unwrap();
+    let r1n2w= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_norm2_weight.safetensors".to_string()).unwrap();
+    let r1n1b= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_norm1_bias.safetensors".to_string()).unwrap();
+    let r1n2b= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_norm2_bias.safetensors".to_string()).unwrap();
+
+
+
+    let lw1= input(r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_weight.safetensors".to_string()).unwrap();
+    let lb1 = input(r"C:\study\coursework\src\trash\test_downblock2d_res1_linear_bias.safetensors".to_string()).unwrap();
+    let kdown = input(r"C:\study\coursework\src\trash\test_downblock2d_downsample.safetensors".to_string()).unwrap();
+    let cdown_b = input(r"C:\study\coursework\src\trash\test_downblock2d_downsample_b.safetensors".to_string()).unwrap();
+
+
+    let time_emb = Rc::new(RefCell::new(temb));
     
     let res1_params = Resnet2d_params{
-        number_of_groups_1: 32, eps_1: 1e-05, gamma_1: 1., beta_1: 0.,
-        in_channels_1: 320, out_channels_1: 320, kernel_size_1: 3, stride_1: 1, padding_1: 1, kernel_weights_1: conv1_res1_vec.to_vec(),
-        weigths: lin_res1_vec.to_vec(), weights_shape: lin_res1_vec_shape.to_vec(), bias: lin_res1_bias.to_vec(), bias_shape: lin_res1_bias_shape.to_vec(), is_bias: true,
-        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: 1., beta_2: 0., 
-        in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: conv2_res1_vec.to_vec(),
+        number_of_groups_1: 32, eps_1: 1e-05, gamma_1: r1n1w, beta_1: r1n1b,
+        in_channels_1: 320, out_channels_1: 320, kernel_size_1: 3, stride_1: 1, padding_1: 1, kernel_weights_1: r1k1.into_raw_vec_and_offset().0,
+        bias_c1: r1c1b, is_bias_c1: true,
+        weights: lw1 , bias: lb1, is_bias: true,
+        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: r1n2w, beta_2: r1n2b, 
+        in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: r1k2.into_raw_vec_and_offset().0,
+        bias_c2: r1c2b, is_bias_c2: true,
         is_shortcut: false,
-        in_channels_short: 960, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: conv_down.to_vec().clone(),
+        in_channels_short: 960, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: vec![1.],
+        bias_s: ndarray::Array4::from_elem((1, 1, 1, 1), 1.),
+        is_bias_s: true,
         time_emb: Rc::clone(&time_emb)
     };
 
-    let (conv1_res2_vec, _) = input(r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_weight.safetensors".to_string()).unwrap();
-    let (conv2_res2_vec, _ ) = input(r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_weight.safetensors".to_string()).unwrap();
-    let (lin_res2_vec, lin_res2_vec_shape) = input(r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_weight.safetensors".to_string()).unwrap();
-    let (lin_res2_bias, lin_res2_bias_shape) = input(r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_bias.safetensors".to_string()).unwrap();
 
+
+    let r1k1= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_weight.safetensors".to_string()).unwrap();
+    let r1k2= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_weight.safetensors".to_string()).unwrap();
+    let r1c1b= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_conv1_bias.safetensors".to_string()).unwrap();
+    let r1c2b= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_conv2_bias.safetensors".to_string()).unwrap();
+
+    let r1n1w= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_norm1_weight.safetensors".to_string()).unwrap();
+    let r1n2w= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_norm2_weight.safetensors".to_string()).unwrap();
+    let r1n1b= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_norm1_bias.safetensors".to_string()).unwrap();
+    let r1n2b= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_norm2_bias.safetensors".to_string()).unwrap();
+
+
+
+    let lw1= input(r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_weight.safetensors".to_string()).unwrap();
+    let lb1 = input(r"C:\study\coursework\src\trash\test_downblock2d_res2_linear_bias.safetensors".to_string()).unwrap();
+
+
+    
     let res2_params = Resnet2d_params{
-        number_of_groups_1: 32, eps_1: 1e-05, gamma_1: 1., beta_1: 0.,
-        in_channels_1: 320, out_channels_1: 320, kernel_size_1: 3, stride_1: 1, padding_1: 1, kernel_weights_1: conv1_res2_vec.to_vec(),
-        weigths: lin_res2_vec.to_vec(), weights_shape: lin_res2_vec_shape.to_vec(), bias: lin_res2_bias.to_vec(), bias_shape: lin_res2_bias_shape.to_vec(), is_bias: true,
-        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: 1., beta_2: 0., time_emb: Rc::clone(&time_emb),
-        in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: conv2_res2_vec.to_vec(),
+        number_of_groups_1: 32, eps_1: 1e-05, gamma_1: r1n1w, beta_1: r1n1b,
+        in_channels_1: 320, out_channels_1: 320, kernel_size_1: 3, stride_1: 1, padding_1: 1, kernel_weights_1: r1k1.into_raw_vec_and_offset().0,
+        bias_c1: r1c1b, is_bias_c1: true,
+        weights: lw1 , bias: lb1, is_bias: true,
+        number_of_groups_2: 32, eps_2: 1e-05, gamma_2: r1n2w, beta_2: r1n2b, 
+        in_channels_2: 320, out_channels_2: 320, padding_2: 1, stride_2: 1, kernel_size_2: 3, kernel_weights_2: r1k2.into_raw_vec_and_offset().0,
+        bias_c2: r1c2b, is_bias_c2: true,
         is_shortcut: false,
-        in_channels_short: 640, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: conv_down.to_vec().clone()
+        in_channels_short: 960, out_channels_short: 320, padding_short: 0, stride_short: 1, kernel_size_short: 1, kernel_weights_short: vec![1.],
+        bias_s: ndarray::Array4::from_elem((1, 1, 1, 1), 1.),
+        is_bias_s: true,
+        time_emb: Rc::clone(&time_emb)
     };
-    let hidden_states: Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>> = Rc::new(RefCell::new(Vec::<(Vec<f32>, Vec<usize>)>::new()));
-    let downblock = DownBlock2D::DownBlock2D_constr(res1_params, res2_params, 320, 320, 1, 2, 3, conv_down.to_vec(), Rc::clone(&hidden_states));
-    let (res_vec, res_vec_shape) = downblock.operation((test_vec.to_vec(), test_shape_vec.to_vec())).unwrap();
-    let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_downsample2d_output.safetensors".to_string()).unwrap();
-    assert!(res_vec_shape == py_vec_shape.to_vec());
-    for i in 0..res_vec.len() {
-        assert!( (res_vec[i] - py_vec[i]).abs() <= 1e-03)
+
+    let hidden_states: Rc<RefCell<Vec<ndarray::Array4<f32>>>> = Rc::new(RefCell::new(Vec::new()));
+    let downblock = DownBlock2D::new(
+        res1_params, 
+        res2_params, 
+        320, 320, 1, 2, 3, 
+        kdown.into_raw_vec_and_offset().0, 
+        cdown_b, true,
+        Rc::clone(&hidden_states)
+    );
+    
+    let _ = downblock.operation(&mut tensor).unwrap();
+    let shape = tensor.shape();
+
+    let py_tensor    = input(r"C:\study\coursework\src\trash\test_downsample2d_output.safetensors".to_string()).unwrap();
+        assert!(shape == py_tensor.shape());
+    for i in 0..shape[0] {
+        for j in 0..shape[1] {
+            for r in 0..shape[2] {
+                for k in 0..shape[3] {
+                    assert!((tensor[[i, j, r, k]] - py_tensor[[i, j, r, k]]).abs() <= 1e-03);
+                }
+            }
+        }
     }
-    let (py_hid1, py_hid1_shape) = input(r"C:\study\coursework\src\trash\test_downsample2d_output_hidden1.safetensors".to_string()).unwrap();
-    let (py_hid2, py_hid2_shape) = input(r"C:\study\coursework\src\trash\test_downsample2d_output_hidden2.safetensors".to_string()).unwrap();
-    let (py_hid3, py_hid3_shape) = input(r"C:\study\coursework\src\trash\test_downsample2d_output_hidden3.safetensors".to_string()).unwrap();
-    assert!(py_hid1_shape.to_vec() ==  hidden_states.borrow()[0].1);
-    assert!(py_hid2_shape.to_vec() ==  hidden_states.borrow()[1].1);
-    assert!(py_hid3_shape.to_vec() ==  hidden_states.borrow()[2].1);
-    for i in 0..py_hid1.len() {
-        assert!((py_hid1[i] - hidden_states.borrow()[0].0[i]).abs() <= 1e-03);
+
+    let hid1 = input(r"C:\study\coursework\src\trash\test_downsample2d_output_hidden1.safetensors".to_string()).unwrap();
+    let hid2 = input(r"C:\study\coursework\src\trash\test_downsample2d_output_hidden2.safetensors".to_string()).unwrap();
+    let hid3 = input(r"C:\study\coursework\src\trash\test_downsample2d_output_hidden3.safetensors".to_string()).unwrap();
+    let vec = hidden_states.borrow();
+    assert!(hid1.shape() ==  vec[0].shape());
+    assert!(hid2.shape() == vec[1].shape());
+    assert!(hid3.shape() ==  vec[2].shape());
+    let sh_h1 =  vec[0].shape();
+        for i in 0..sh_h1[0] {
+        for j in 0..sh_h1[1] {
+            for r in 0..sh_h1[2] {
+                for k in 0..sh_h1[3] {
+                    assert!((vec[0][[i, j, r, k]] - hid1[[i, j, r, k]]).abs() <= 1e-02);
+                }
+            }
+        }
     }
-    for i in 0..py_hid2.len() {
-        assert!((py_hid2[i] - hidden_states.borrow()[1].0[i]).abs() <= 1e-03);
+
+
+    let sh_h1 =  vec[1].shape();
+        for i in 0..sh_h1[0] {
+        for j in 0..sh_h1[1] {
+            for r in 0..sh_h1[2] {
+                for k in 0..sh_h1[3] {
+                    assert!((vec[1][[i, j, r, k]] - hid2[[i, j, r, k]]).abs() <= 1e-02);
+                }
+            }
+        }
     }
-    for i in 0..py_hid3.len() {
-        assert!((py_hid3[i] - hidden_states.borrow()[2].0[i]).abs() <= 1e-03);
+
+    let sh_h1 =  vec[2].shape();
+        for i in 0..sh_h1[0] {
+        for j in 0..sh_h1[1] {
+            for r in 0..sh_h1[2] {
+                for k in 0..sh_h1[3] {
+                    assert!((vec[2][[i, j, r, k]] - hid3[[i, j, r, k]]).abs() <= 1e-02);
+                }
+            }
+        }
     }
+
 }

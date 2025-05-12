@@ -1,16 +1,18 @@
 // use blocks::down;
 use cudarc::{self};
 use layers::norm::{GroupNorm, LayerNorm};
+use ndarray::Shape;
 use safetensors::tensor;
 // use main_parts::unet::Unet2dConditionModel;
 use core::f32;
 use std::fmt::format;
+use std::vec;
 use std::{rc::Rc, sync::mpsc::Receiver};
 use std::cell::RefCell;
 
 mod func;
 mod layers;
-// mod blocks;
+mod blocks;
 // mod main_parts;
 use crate::layers::conv::Conv2d;
 use crate::layers::layer::Layer;
@@ -18,6 +20,11 @@ use crate::func::functions::input;
 use crate::layers::linear::Linear;
 use crate::layers::upsample::Upsample2D;
 use crate::layers::downsample::DownSample2D;
+use crate::blocks::ff::FeedForward;
+use crate::blocks::resnet::Resnet2d;
+use crate::layers::params::Resnet2d_params;
+use crate::blocks::downblock::DownBlock2D;
+use crate::blocks::attn::Attention;
 // use crate::{
 //     func::functions::{Tensor_Mul, input, nearest_neighbour_interpolation, output, scalar_timestep_embedding}, 
 //     layers::{
@@ -50,23 +57,41 @@ use crate::layers::downsample::DownSample2D;
 // };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut tensor = input(r"C:\study\coursework\src\trash\test_downsample_inp.safetensors".to_string()).unwrap();
-    let kernel = input(r"C:\study\coursework\src\trash\test_downsample_conv.safetensors".to_string()).unwrap();
-    let bias = input(r"C:\study\coursework\src\trash\test_downsample_conv_b.safetensors".to_string()).unwrap();
-    let downsample2d = DownSample2D::new(640, 640, 1, 2, 3, kernel.into_raw_vec_and_offset().0, bias, true);
-    let _ = downsample2d.operation(&mut tensor);
-    let py_tensor = input(r"C:\study\coursework\src\trash\test_downsample_outp.safetensors".to_string()).unwrap();
+    let mut tensor = input(r"C:\study\coursework\src\trash\test_attn1_test_bchw.safetensors".to_string()).unwrap();
+    let encoder = input(r"C:\study\coursework\src\trash\test_attn1_encoder_test.safetensors".to_string()).unwrap().remove_axis(ndarray::Axis(0));
+    let q_w = input(r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors".to_string()).unwrap();
+    let k_w = input(r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors".to_string()).unwrap();
+    let v_w = input(r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors".to_string()).unwrap();
+    let out_w = input(r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors".to_string()).unwrap(); 
+    let out_b = input(r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors".to_string()).unwrap(); 
+    let enc_placeholder = Rc::new(RefCell::new(encoder));
+    let attn1 = Attention::new(
+        q_w.clone(), q_w, false, 
+        k_w.clone(), k_w, false, 
+        v_w.clone(), v_w, false, 
+        out_w, out_b, true, 
+        enc_placeholder,false, 20);
+    let _ = attn1.operation(&mut tensor).unwrap();
     let shape = tensor.shape();
+    let py_tensor = input(  r"C:\study\coursework\src\trash\test_attn1_output_bchw_test.safetensors".to_string()).unwrap();
     assert!(shape == py_tensor.shape());
     for i in 0..shape[0] {
         for j in 0..shape[1] {
             for r in 0..shape[2] {
                 for k in 0..shape[3] {
-                    assert!((tensor[[i, j, r, k]] - py_tensor[[i, j, r, k]]).abs() <= 1e-05);
+                    assert!((tensor[[i, j, r, k]] - py_tensor[[i, j, r, k]]).abs() <= 1e-6);
                 }
             }
         }
     }
+
+
+
+
+
+
+
+
 
 
     // let (res_vec, res_vec_shape) = downsample2d.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();

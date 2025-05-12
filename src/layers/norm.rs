@@ -1,10 +1,9 @@
 use ndarray::{Axis, Zip};
-use statrs::function::gamma::gamma;
-
+use ndarray::{ArrayBase, DataMut, Ix4};
 use crate::layers::layer::Layer;
 use crate::func::functions::{input, output};
 
-pub struct GroupNorm {
+pub struct GroupNorm{
     pub number_of_groups: usize,
     pub eps: f32,
     pub gamma: ndarray::Array4<f32>,
