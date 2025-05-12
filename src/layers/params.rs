@@ -2,9 +2,9 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 pub struct Transformer2D_params {
-    pub number_of_groups: usize, pub eps: f32, pub gamma: f32, pub beta: f32,
-    pub weigths_in: Vec<f32>, pub weights_shape_in: Vec<usize>, pub bias_in: Vec<f32>, pub bias_shape_in : Vec<usize>, pub is_bias_in : bool,
-    pub weigths_out: Vec<f32>, pub weights_shape_out: Vec<usize>, pub bias_out: Vec<f32>, pub bias_shape_out : Vec<usize>, pub is_bias_out : bool,
+    pub number_of_groups: usize, pub eps: f32, pub gamma: ndarray::Array4<f32>, pub beta: ndarray::Array4<f32>,
+    pub weigths_in: ndarray::Array4<f32>, pub bias_in: ndarray::Array4<f32>, pub is_bias_in : bool,
+    pub weigths_out: ndarray::Array4<f32>, pub bias_out: ndarray::Array4<f32>, pub is_bias_out : bool,
     pub params_for_basics_vec : Vec<BasicTransofmerBlock_params>,
 }
 

@@ -77,55 +77,71 @@ impl Layer for BasicTransofmerBlock {
     }
 }
 
-// #[test]
-// fn test_btb_bse_unbiased() {
-//     let (weigths_1, weights_shape_1) = input(r"C:\study\coursework\src\trash\test_btb1_attn1_q_test.safetensors".to_string()).unwrap();
-//     let (weigths_2, weights_shape_2) = input(r"C:\study\coursework\src\trash\test_btb1_attn1_k_test.safetensors".to_string()).unwrap();
-//     let (weigths_3, weights_shape_3) = input(r"C:\study\coursework\src\trash\test_btb1_attn1_v_test.safetensors".to_string()).unwrap();
-//     let (weigths_4, weights_shape_4) = input(r"C:\study\coursework\src\trash\test_btb1_attn1_out_w_test.safetensors".to_string()).unwrap(); 
-//     let (bias_4, bias_shape_4) = input(r"C:\study\coursework\src\trash\test_btb1_attn1_out_b_test.safetensors".to_string()).unwrap(); 
+#[test]
+fn test_btb_bchw_biased() {
+    let weights_1 = input(r"C:\study\coursework\src\trash\test_btb1_attn1_q_test.safetensors".to_string()).unwrap();
+    let weights_2= input(r"C:\study\coursework\src\trash\test_btb1_attn1_k_test.safetensors".to_string()).unwrap();
+    let weights_3 = input(r"C:\study\coursework\src\trash\test_btb1_attn1_v_test.safetensors".to_string()).unwrap();
+    let weights_4 = input(r"C:\study\coursework\src\trash\test_btb1_attn1_out_w_test.safetensors".to_string()).unwrap(); 
+    let bias_4 = input(r"C:\study\coursework\src\trash\test_btb1_attn1_out_b_test.safetensors".to_string()).unwrap(); 
 
-//     let (weigths_5, weights_shape_5) = input(r"C:\study\coursework\src\trash\test_btb1_attn2_q_test.safetensors".to_string()).unwrap();
-//     let (weigths_6, weights_shape_6) = input(r"C:\study\coursework\src\trash\test_btb1_attn2_k_test.safetensors".to_string()).unwrap();
-//     let (weigths_7, weights_shape_7) = input(r"C:\study\coursework\src\trash\test_btb1_attn2_v_test.safetensors".to_string()).unwrap();
-//     let (weigths_8, weights_shape_8) = input(r"C:\study\coursework\src\trash\test_btb1_attn2_out_w_test.safetensors".to_string()).unwrap(); 
-//     let (bias_8, bias_shape_8) = input(r"C:\study\coursework\src\trash\test_btb1_attn2_out_b_test.safetensors".to_string()).unwrap(); 
+    let weights_5 = input(r"C:\study\coursework\src\trash\test_btb1_attn2_q_test.safetensors".to_string()).unwrap();
+    let weights_6 = input(r"C:\study\coursework\src\trash\test_btb1_attn2_k_test.safetensors".to_string()).unwrap();
+    let weights_7 = input(r"C:\study\coursework\src\trash\test_btb1_attn2_v_test.safetensors".to_string()).unwrap();
+    let weights_8 = input(r"C:\study\coursework\src\trash\test_btb1_attn2_out_w_test.safetensors".to_string()).unwrap(); 
+    let bias_8 = input(r"C:\study\coursework\src\trash\test_btb1_attn2_out_b_test.safetensors".to_string()).unwrap(); 
 
-//     let (weigths_ff1, weights_shape_ff1) = input(r"C:\study\coursework\src\trash\test_btb1_geglu_w_test.safetensors".to_string()).unwrap();
-//     let (bias_ff1, bias_shape_ff1) = input(r"C:\study\coursework\src\trash\test_btb1_geglu_b_test.safetensors".to_string()).unwrap();
+    let weights_ff1 = input(r"C:\study\coursework\src\trash\test_btb1_geglu_w_test.safetensors".to_string()).unwrap();
+    let bias_ff1 = input(r"C:\study\coursework\src\trash\test_btb1_geglu_b_test.safetensors".to_string()).unwrap();
 
-//     let (weigths_ff2, weights_shape_ff2) = input(r"C:\study\coursework\src\trash\test_btb1_ff_w_test.safetensors".to_string()).unwrap();
-//     let (bias_ff2, bias_shape_ff2) = input(r"C:\study\coursework\src\trash\test_btb1_ff_b_test.safetensors".to_string()).unwrap();
+    let weights_ff2 = input(r"C:\study\coursework\src\trash\test_btb1_ff_w_test.safetensors".to_string()).unwrap();
+    let bias_ff2 = input(r"C:\study\coursework\src\trash\test_btb1_ff_b_test.safetensors".to_string()).unwrap();
 
-//     let (test_vec, test_vec_shape) = input(r"C:\study\coursework\src\trash\test_btb1_test.safetensors".to_string()).unwrap();
-//     let (encoder_vec, encoder_vec_shape) = input(r"C:\study\coursework\src\trash\test_btb1_encoder.safetensors".to_string()).unwrap();
-//     let encoder_hidden = Rc::new(RefCell::new((encoder_vec.to_vec(), encoder_vec_shape.to_vec())));
+    let gamma1 = input(format!(r"C:\study\coursework\src\trash\test_btb1_norm1_w_test.safetensors")).unwrap();
+    let gamma2 = input(format!(r"C:\study\coursework\src\trash\test_btb1_norm2_w_test.safetensors")).unwrap();
+    let gamma3 = input(format!(r"C:\study\coursework\src\trash\test_btb1_norm3_w_test.safetensors")).unwrap();
 
-//     let params = BasicTransofmerBlock_params{
-//         eps_1 : 1e-05, gamma_1: 1., beta_1: 0., number_1: 1280,
-//         eps_2 : 1e-05, gamma_2: 1., beta_2: 0., number_2: 1280,
-//         eps_3: 1e-05, gamma_3: 1., beta_3: 0., number_3: 1280,
+    let beta1 = input(format!(r"C:\study\coursework\src\trash\test_btb1_norm1_b_test.safetensors")).unwrap();
+    let beta2 = input(format!(r"C:\study\coursework\src\trash\test_btb1_norm2_b_test.safetensors")).unwrap();
+    let beta3 = input(format!(r"C:\study\coursework\src\trash\test_btb1_norm3_b_test.safetensors")).unwrap();
 
-//         weigths_1: weigths_1.to_vec(), weights_shape_1: weights_shape_1.to_vec(), bias_1: weigths_1.to_vec(), bias_shape_1: weights_shape_1.to_vec(), is_bias_1: false,
-//         weigths_2: weigths_2.to_vec(), weights_shape_2: weights_shape_2.to_vec(), bias_2: weigths_2.to_vec(), bias_shape_2: weights_shape_2.to_vec(), is_bias_2: false,
-//         weigths_3: weigths_3.to_vec(), weights_shape_3: weights_shape_3.to_vec(), bias_3: weigths_3.to_vec(), bias_shape_3: weights_shape_3.to_vec(), is_bias_3: false,
-//         weigths_4: weigths_4.to_vec(), weights_shape_4: weights_shape_4.to_vec(), bias_4: bias_4.to_vec(), bias_shape_4: bias_shape_4.to_vec(), is_bias_4: true,
-//         encoder_hidden_tensor_1: Rc::clone(&encoder_hidden), if_encoder_tensor_1 : false, number_of_heads_1: 20,
-        
-//         weigths_5: weigths_5.to_vec(), weights_shape_5: weights_shape_5.to_vec(), bias_5: weigths_5.to_vec(), bias_shape_5: weights_shape_5.to_vec(), is_bias_5: false,
-//         weigths_6: weigths_6.to_vec(), weights_shape_6: weights_shape_6.to_vec(), bias_6: weigths_6.to_vec(), bias_shape_6: weights_shape_6.to_vec(), is_bias_6: false,
-//         weigths_7: weigths_7.to_vec(), weights_shape_7: weights_shape_7.to_vec(), bias_7: weigths_7.to_vec(), bias_shape_7: weights_shape_7.to_vec(), is_bias_7: false,
-//         weigths_8: weigths_8.to_vec(), weights_shape_8: weights_shape_8.to_vec(), bias_8: bias_8.to_vec(), bias_shape_8: bias_shape_8.to_vec(), is_bias_8: true,
-//         encoder_hidden_tensor_2: Rc::clone(&encoder_hidden), if_encoder_tensor_2 : true, number_of_heads_2: 20,
 
-//         weigths_ff1: weigths_ff1.to_vec(), weights_shape_ff1: weights_shape_ff1.to_vec(), bias_ff1: bias_ff1.to_vec(), bias_shape_ff1: bias_shape_ff1.to_vec(), is_bias_ff1: true,
-//         weigths_ff2: weigths_ff2.to_vec(), weights_shape_ff2: weights_shape_ff2.to_vec(), bias_ff2: bias_ff2.to_vec(), bias_shape_ff2: bias_shape_ff2.to_vec(), is_bias_ff2: true,
-//     };
-//     let btb1 = BasicTransofmerBlock::BasicTransofmerBlock_constr(&params);
-//     let (res_vec, res_vec_shape) = btb1.operation((test_vec.to_vec(), test_vec_shape.to_vec())).unwrap();
-//     let (py_vec, py_vec_shape) = input(r"C:\study\coursework\src\trash\test_btb1_output_test.safetensors".to_string()).unwrap();
-//     assert!(py_vec_shape.to_vec() == res_vec_shape);
-//     for i in 0..res_vec.len() {
-//         assert!((res_vec[i] - py_vec[i]).abs() <= 1e-01);
-//     }
-// }
+
+    let mut tensor = input(r"C:\study\coursework\src\trash\test_btb1_bchw_test.safetensors".to_string()).unwrap();
+    let encoder = input(r"C:\study\coursework\src\trash\test_btb1_encoder.safetensors".to_string()).unwrap();
+    let encoder_hidden = Rc::new(RefCell::new(encoder.remove_axis(ndarray::Axis(0))));
+    let params = BasicTransofmerBlock_params {
+    eps_1 : 1e-05, gamma_1 : gamma1, beta_1 : beta1, number_1 : 1280, // LayerNorm 
+    eps_2 : 1e-05, gamma_2 : gamma2, beta_2 : beta2, number_2 : 1280, // LayerNorm 
+    eps_3 : 1e-05, gamma_3 : gamma3, beta_3 : beta3, number_3 : 1280, // LayerNorm 
+    weights_1: weights_1, bias_1: ndarray::Array4::from_elem((1,1,1,1), 1.), is_bias_1 : false,  // Attn1
+    weights_2: weights_2, bias_2: ndarray::Array4::from_elem((1,1,1,1), 1.), is_bias_2 : false,
+    weights_3: weights_3, bias_3: ndarray::Array4::from_elem((1,1,1,1), 1.), is_bias_3 : false,
+    weights_4: weights_4, bias_4: bias_4, is_bias_4 : true,
+    encoder_hidden_tensor_1 : Rc::clone(&encoder_hidden), if_encoder_tensor_1 : false, number_of_heads_1: 20, 
+
+    weights_5: weights_5, bias_5: ndarray::Array4::from_elem((1,1,1,1), 1.), is_bias_5 : false,  // Attn2
+    weights_6: weights_6, bias_6: ndarray::Array4::from_elem((1,1,1,1), 1.), is_bias_6 : false,
+    weights_7: weights_7, bias_7: ndarray::Array4::from_elem((1,1,1,1), 1.), is_bias_7 : false,
+    weights_8: weights_8, bias_8: bias_8, is_bias_8 : true,
+    encoder_hidden_tensor_2 : Rc::clone(&encoder_hidden), if_encoder_tensor_2 : true, number_of_heads_2: 20, 
+
+    weights_ff1: weights_ff1, bias_ff1: bias_ff1, is_bias_ff1 : true, // FeedForward
+    weights_ff2: weights_ff2, bias_ff2: bias_ff2, is_bias_ff2 : true,
+    };
+    let btb1 = BasicTransofmerBlock::new(params);
+
+    let _ = btb1.operation(&mut tensor);
+    let shape = tensor.shape();
+    let py_tensor = input(r"C:\study\coursework\src\trash\test_btb1_bchw_output.safetensors".to_string()).unwrap();
+    assert!(shape == py_tensor.shape());
+    for i in 0..shape[0] {
+        for j in 0..shape[1] {
+            for r in 0..shape[2] {
+                for k in 0..shape[3] {
+                    assert!((tensor[[i, j, r, k]] - py_tensor[[i, j, r, k]]).abs() <= 1e-05);
+                }
+            }
+        }
+    }
+}

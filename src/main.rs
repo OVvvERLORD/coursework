@@ -5,6 +5,7 @@ use ndarray::Shape;
 use safetensors::tensor;
 // use main_parts::unet::Unet2dConditionModel;
 use core::f32;
+use std::env::args;
 use std::fmt::format;
 use std::vec;
 use std::{rc::Rc, sync::mpsc::Receiver};
@@ -25,6 +26,11 @@ use crate::blocks::resnet::Resnet2d;
 use crate::layers::params::Resnet2d_params;
 use crate::blocks::downblock::DownBlock2D;
 use crate::blocks::attn::Attention;
+use crate::blocks::btb::BasicTransofmerBlock;
+use crate::layers::params::BasicTransofmerBlock_params;
+use  crate::blocks::upblock::UpBlock2d;
+use crate::blocks::trans::Transformer2D;
+use crate::layers::params::Transformer2D_params;
 // use crate::{
 //     func::functions::{Tensor_Mul, input, nearest_neighbour_interpolation, output, scalar_timestep_embedding}, 
 //     layers::{
@@ -51,39 +57,35 @@ use crate::blocks::attn::Attention;
 //         mid::mid_block,
 //         // up::Up_blocks,
 //         // downblock::DownBlock2D,
-//         down::Down_blocks
+//         down::Down_blockss
 //     },
 //     main_parts::unet
 // };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut tensor = input(r"C:\study\coursework\src\trash\test_attn1_test_bchw.safetensors".to_string()).unwrap();
-    let encoder = input(r"C:\study\coursework\src\trash\test_attn1_encoder_test.safetensors".to_string()).unwrap().remove_axis(ndarray::Axis(0));
-    let q_w = input(r"C:\study\coursework\src\trash\test_attn1_q_test.safetensors".to_string()).unwrap();
-    let k_w = input(r"C:\study\coursework\src\trash\test_attn1_k_test.safetensors".to_string()).unwrap();
-    let v_w = input(r"C:\study\coursework\src\trash\test_attn1_v_test.safetensors".to_string()).unwrap();
-    let out_w = input(r"C:\study\coursework\src\trash\test_attn1_out_w_test.safetensors".to_string()).unwrap(); 
-    let out_b = input(r"C:\study\coursework\src\trash\test_attn1_out_b_test.safetensors".to_string()).unwrap(); 
-    let enc_placeholder = Rc::new(RefCell::new(encoder));
-    let attn1 = Attention::new(
-        q_w.clone(), q_w, false, 
-        k_w.clone(), k_w, false, 
-        v_w.clone(), v_w, false, 
-        out_w, out_b, true, 
-        enc_placeholder,false, 20);
-    let _ = attn1.operation(&mut tensor).unwrap();
-    let shape = tensor.shape();
-    let py_tensor = input(  r"C:\study\coursework\src\trash\test_attn1_output_bchw_test.safetensors".to_string()).unwrap();
-    assert!(shape == py_tensor.shape());
-    for i in 0..shape[0] {
-        for j in 0..shape[1] {
-            for r in 0..shape[2] {
-                for k in 0..shape[3] {
-                    assert!((tensor[[i, j, r, k]] - py_tensor[[i, j, r, k]]).abs() <= 1e-6);
-                }
-            }
-        }
-    }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,5 +1,4 @@
 use ndarray::Zip;
-use ndarray_linalg::krylov::H;
 
 use crate::{
     func::functions::{Tensor_Mul,input},
@@ -58,14 +57,18 @@ impl Attention {
 impl Layer for Attention {
     fn operation(&self,  args:&mut ndarray::Array4<f32>) -> Result<(), Box<dyn std::error::Error>> {
         let initial_shape = args.shape();
-        let mut q_tensor = args
+        let mut q_tensor:ndarray::Array4<f32> = if initial_shape[0] != 1 
+        {args
         .clone()
         .into_shape_with_order((initial_shape[0], initial_shape[1], initial_shape[2] * initial_shape[3]))
         .unwrap()
         .permuted_axes([0, 2, 1])
         .as_standard_layout()
-        .to_owned().insert_axis(ndarray::Axis(0));
-
+        .to_owned()
+        .insert_axis(ndarray::Axis(0))
+        }
+        else
+        {args.view().to_owned()};
         let mut k_tensor = if !self.if_encoder_tensor 
         {q_tensor.clone()}
         else
@@ -78,7 +81,7 @@ impl Layer for Attention {
 
         let (batch_size, _, _ )= if !self.if_encoder_tensor
         {
-            (initial_shape[0], initial_shape[2] * initial_shape[3], initial_shape[1])
+            (initial_shape[1], initial_shape[2] * initial_shape[3], initial_shape[1])
         }
         else
         {
@@ -138,12 +141,17 @@ impl Layer for Attention {
         .insert_axis(ndarray::Axis(0));
 
         let _ = &self.operations[3].operation(&mut q_tensor)?;
-        q_tensor = q_tensor
+        q_tensor = if !initial_shape[0] == 1 
+        {
+        q_tensor
         .permuted_axes([0, 1, 3, 2])
         .as_standard_layout()
         .into_shape_with_order((initial_shape[0], initial_shape[1], initial_shape[2], initial_shape[3]))
         .unwrap()
-        .to_owned();
+        .to_owned()
+    }
+        else 
+        {q_tensor};
 
         *args = q_tensor;
         Ok(())
