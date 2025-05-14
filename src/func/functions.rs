@@ -1,31 +1,94 @@
 use std::{fs::File, io::{Read, Write}, sync::Arc};
-use ndarray;
+use ndarray::{self, Axis};
 use safetensors::{serialize, SafeTensors};
+use rayon::prelude::*;
+use ndarray_einsum::einsum;
 
 pub fn Tensor_Mul(A: &mut ndarray::Array4<f32>, B: &ndarray::Array4<f32>) ->  Result<(), Box<dyn std::error::Error>> {
     // let A = ndarray::Array4::from_shape_vec((args.1[0], args.1[1], args.1[2], args.1[3]), args.0)?;
     // let B = ndarray::Array4::from_shape_vec((args.3[0], args.3[1], args.3[2], args.3[3]), args.2)?;
+    // let shape = A.shape();
+    // // let B = B.broadcast([shape[0], shape[1], shape[2], shape[3]]).unwrap();
+    // let B = B.broadcast((shape[0], shape[1], B.shape()[2], B.shape()[3])).unwrap();
+    // let mut result_shape = shape.to_vec();
+    // result_shape[3] = B.shape()[2];
+    // let mut result = ndarray::Array4::<f32>::zeros((result_shape[0], result_shape[1], result_shape[2], result_shape[3]));
+    // for ((mut res, a_batch), b_batch) in result
+    //     .axis_iter_mut(ndarray::Axis(0))
+    //     .zip(A.axis_iter(ndarray::Axis(0)))
+    //     .zip(B.axis_iter(ndarray::Axis(0)))
+    // { 
+    //     for ((mut res_slice, a_slice), b_slice) in res
+    //         .axis_iter_mut(ndarray::Axis(0))
+    //         .zip(a_batch.axis_iter(ndarray::Axis(0)))
+    //         .zip(b_batch.axis_iter(ndarray::Axis(0)))
+    //     {
+    //         let b_transposed = b_slice.view().reversed_axes();
+    //         res_slice.assign(&a_slice.dot(&b_transposed));
+    //     }
+    // }
+    // *A = result;
+    // let shape_a = A.dim();
+    // let temp_a = A
+    // .view()
+    // .into_shape_with_order([shape_a.0 * shape_a.1 * shape_a.2, shape_a.3])
+    // .unwrap();
+
+    // let mut shape_b = B.shape();
+    // let temp_b = B
+    // .view()
+    // .into_shape_with_order([shape_b[0] * shape_b[1] * shape_b[2], shape_b[3]])
+    // .unwrap()
+    // .reversed_axes();
+    // // shape_b = temp_b.shape();
+    // print!("\nMUL: {:?} {:?}\n", temp_a.shape(), temp_b.shape());
+    // print!("\n{:?}\n", shape_b[2]);
+    // *A = temp_a.dot(&temp_b).into_shape_with_order([shape_a.0, shape_a.1, shape_a.2, shape_b[2]]).unwrap();
+    // print!("\nMUL ITOG :{:?}\n", A.shape());
+
+    // let a_shape = A.dim();
+    // let b_shape = B.dim();
+    // let temp_b = B
+    // .clone()
+    // .permuted_axes([0, 1, 3, 2])
+    // .broadcast([a_shape.0, a_shape.1, b_shape.3, b_shape.2])
+    // .unwrap()
+    // .to_owned();
+
+    // *A = einsum("bchw,bcws->bchs", &[A, &temp_b])
+    // .unwrap()
+    // .into_dimensionality()
+    // .unwrap();
+
+
     let shape = A.shape();
     // let B = B.broadcast([shape[0], shape[1], shape[2], shape[3]]).unwrap();
     let B = B.broadcast((shape[0], shape[1], B.shape()[2], B.shape()[3])).unwrap();
     let mut result_shape = shape.to_vec();
     result_shape[3] = B.shape()[2];
     let mut result = ndarray::Array4::<f32>::zeros((result_shape[0], result_shape[1], result_shape[2], result_shape[3]));
-    for ((mut res, a_batch), b_batch) in result
+    result
+    .axis_iter_mut(ndarray::Axis(0))
+    .into_par_iter()
+    .zip(A.axis_iter(ndarray::Axis(0)).into_par_iter())
+    .zip(B.axis_iter(ndarray::Axis(0)).into_par_iter())
+    .for_each(|((mut batch_res, batch_a), batch_b)| {
+        batch_res
         .axis_iter_mut(ndarray::Axis(0))
-        .zip(A.axis_iter(ndarray::Axis(0)))
-        .zip(B.axis_iter(ndarray::Axis(0)))
-    {
-        for ((mut res_slice, a_slice), b_slice) in res
-            .axis_iter_mut(ndarray::Axis(0))
-            .zip(a_batch.axis_iter(ndarray::Axis(0)))
-            .zip(b_batch.axis_iter(ndarray::Axis(0)))
-        {
-            let b_transposed = b_slice.view().reversed_axes();
-            res_slice.assign(&a_slice.dot(&b_transposed));
-        }
+        .into_par_iter()
+        .zip(batch_a.axis_iter(ndarray::Axis(0)).into_par_iter())
+        .zip(batch_b.axis_iter(ndarray::Axis(0)).into_par_iter())
+        .for_each(
+            |((mut ch_res, ch_a), ch_b)| {
+                let b_trans = ch_b.view().reversed_axes();
+                ch_res.assign(&ch_a.dot(&b_trans));
+            }
+        );
     }
+    );
     *A = result;
+
+
     Ok(())
 }
 

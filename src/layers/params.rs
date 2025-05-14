@@ -53,7 +53,8 @@ pub struct CrossAttnUpBlock2D_params {
     pub params_for_resnet2 : Resnet2d_params,
     pub params_for_resnet3 : Resnet2d_params,
     pub in_channels: usize, pub out_channels: usize, pub padding: i32, pub stride : i32, pub kernel_size: usize, pub kernel_weights: Vec<f32>,
-    pub hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>
+    pub bias: ndarray::Array4<f32>, pub is_bias:bool,
+    pub hidden_states : Rc<RefCell<Vec<ndarray::Array4<f32>>>>
 }
 
 pub struct CrossAttnDownBlock2D_params {
@@ -62,6 +63,15 @@ pub struct CrossAttnDownBlock2D_params {
     pub params_for_transformer2 : Transformer2D_params,
     pub params_for_resnet1 : Resnet2d_params,
     pub params_for_resnet2: Resnet2d_params,
-    pub in_channels : usize, pub out_channels : usize, pub padding : i32, pub stride : i32, pub kernel_size : usize, pub kernel_weights : Vec<f32>,
-    pub hidden_states : Rc<RefCell<Vec<(Vec<f32>, Vec<usize>)>>>
+
+    pub in_channels : usize, 
+    pub out_channels : usize, 
+    pub padding : i32, 
+    pub stride : i32,
+    pub kernel_size : usize, 
+    pub kernel_weights : Vec<f32>,
+    pub bias: ndarray::Array4<f32>,
+    pub is_bias:bool,
+    
+    pub hidden_states : Rc<RefCell<Vec<ndarray::Array4<f32>>>>
 }

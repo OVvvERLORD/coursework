@@ -2,7 +2,8 @@ use ndarray::{Axis, Zip};
 use ndarray::{ArrayBase, DataMut, Ix4};
 use crate::layers::layer::Layer;
 use crate::func::functions::{input, output};
-
+use rayon::prelude::*;
+use ndarray::parallel::prelude::*;
 pub struct GroupNorm{
     pub number_of_groups: usize,
     pub eps: f32,
@@ -63,7 +64,7 @@ impl Layer for LayerNorm {
         .insert_axis(ndarray::Axis(3));
         let vars = args.map_axis(ndarray::Axis(3), |sl| {
             let mean = sl.mean().unwrap();
-            sl.iter().map(|x| (x - mean).powi(2)).sum::<f32>() / sl.len() as f32
+            sl.into_par_iter().map(|x| (x - mean).powi(2)).sum::<f32>() / sl.len() as f32
         }).insert_axis(ndarray::Axis(3));
         let means = means
         .broadcast(args.shape())

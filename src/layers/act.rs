@@ -2,12 +2,14 @@ use crate::layers::layer::Layer;
 use crate::func::functions::input;
 use statrs::function::erf::erf;
 use crate::f32::consts::E;
+use rayon::prelude::*;
+use ndarray::prelude::*;
 use ndarray;
 
 pub struct SiLU;
 impl Layer for SiLU {
     fn operation(&self,  args:&mut ndarray::Array4<f32>) -> Result<(), Box<dyn std::error::Error>> {
-        args.mapv_inplace(|x| x / (1. + (-x).exp()));
+        args.par_mapv_inplace(|x| x / (1. + (-x).exp()));
         Ok(())
     }
 }
@@ -16,7 +18,7 @@ pub struct GeLU;
 impl Layer for GeLU {
     fn operation(&self,  args:&mut ndarray::Array4<f32>) -> Result<(), Box<dyn std::error::Error>> {
         let cnst = (2_f64).powf(1. / 2.);
-        args.mapv_inplace(|x| x * (1. / 2.) * ((1. + erf((x as f64) / cnst)) as f32));
+        args.par_mapv_inplace(|x| x * (1. / 2.) * ((1. + erf((x as f64) / cnst)) as f32));
         Ok(())
     }
 }
