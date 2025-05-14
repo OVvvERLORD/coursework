@@ -46,6 +46,7 @@ impl Layer for GroupNorm {
                 }
             }
         }
+
         Ok(())
     }
 }

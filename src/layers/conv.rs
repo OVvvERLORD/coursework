@@ -64,6 +64,7 @@ impl Layer for Conv2d {
             if self.is_bias {
                 let shape = args.shape();
                 let target = self.bias.shape()[3];
+
                 let bias = &self.bias.clone().into_shape_with_order((1, target, 1, 1)).unwrap();
                 let bias = bias.broadcast((shape[0], target, shape[2], shape[3])).unwrap();
                 *args += &bias;
