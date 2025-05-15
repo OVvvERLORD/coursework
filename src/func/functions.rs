@@ -1,4 +1,4 @@
-use std::{fs::File, io::{Read, Write}, sync::Arc};
+use std::{cell::RefCell, fs::File, io::{Read, Write}, rc::Rc, sync::Arc};
 use ndarray::{self, Axis};
 use safetensors::{serialize, SafeTensors};
 use rayon::prelude::*;
@@ -153,19 +153,22 @@ pub fn nearest_neighbour_interpolation (args:&mut ndarray::Array4<f32>) -> Resul
     Ok(())
 }
 
-pub fn scalar_timestep_embedding(timestep: f32, batch_size: usize, dim: usize) ->  Result<(Vec<f32>, Vec<usize>), Box<dyn std::error::Error>> {
-    let mut scalar = ndarray::Array1::from_shape_vec([1], [timestep].to_vec()).unwrap();
-    scalar = scalar.broadcast(batch_size)
+pub fn scalar_timestep_embedding(timestep: ndarray::Array1<f32>, batch_size: usize, dim: usize) ->  Result <ndarray::Array4<f32>, Box<dyn std::error::Error>> {
+    // let mut scalar = ndarray::Array1::from_shape_vec([1], [timestep].to_vec()).unwrap();
+
+    let mut scalar = timestep.broadcast(batch_size)
     .unwrap().
     to_owned(); // timestep -> tensor[timestep,..., timestep] 1D 
     let half_dim = (dim / 2) as f32;
     let mut exponent_arr = ndarray::Array1::from_iter(ndarray::range(0., half_dim, 1.));
     exponent_arr = exponent_arr * ( - f32::ln( 10000.0));
-    exponent_arr = exponent_arr / (half_dim - 1.);
+    exponent_arr = exponent_arr / (half_dim - 0.);
 
-    for i in 0..exponent_arr.len() {
-        exponent_arr[i] = f32::exp(exponent_arr[i]);
-    }
+    exponent_arr.mapv_inplace(|x| x.exp());
+
+    // for i in 0..exponent_arr.len() {
+    //     exponent_arr[i] = f32::exp(exponent_arr[i]);
+    // }
     
     let timesteps_2d = scalar.insert_axis(ndarray::Axis(1));
     let emb_2d = exponent_arr.insert_axis(ndarray::Axis(0));
@@ -181,14 +184,38 @@ pub fn scalar_timestep_embedding(timestep: f32, batch_size: usize, dim: usize) -
 
     let result = ndarray::
     concatenate(ndarray::Axis(1), &[emb_cos.view(), emb_sin.view()])
+    .unwrap()
+    .as_standard_layout()
+    .to_owned();
+    // let mut res_vec_shape = result.shape().to_vec();
+    // if res_vec_shape.len() == 2 {
+    //     res_vec_shape.insert(0, 1);
+    //     res_vec_shape.insert(0, 1);
+    // }
+    // let res_vec = result.as_standard_layout()
+    // .to_owned()
+    // .into_raw_vec_and_offset().0;
+    Ok(result
+        .insert_axis(ndarray::Axis(0))
+        .insert_axis(ndarray::Axis(0)))
+}
+
+pub fn aug_emb(add_kwargs : Rc<RefCell<(ndarray::Array4<f32>, ndarray::Array4<f32>)>>) -> Result<ndarray::Array4<f32>, Box<dyn std::error::Error>> {
+    let kwargs = add_kwargs.borrow();
+    let add_time_ids = &kwargs.0;
+    let add_text_embs = &kwargs.1;
+    let shape = add_time_ids.dim();
+    let add_time_ids_fl = add_time_ids.clone()
+    .into_shape_with_order([shape.0 * shape.1 * shape.2 * shape.3])
     .unwrap();
-    let mut res_vec_shape = result.shape().to_vec();
-    if res_vec_shape.len() == 2 {
-        res_vec_shape.insert(0, 1);
-        res_vec_shape.insert(0, 1);
-    }
-    let res_vec = result.as_standard_layout()
-    .to_owned()
-    .into_raw_vec_and_offset().0;
-    Ok((res_vec, res_vec_shape))
+    let test = scalar_timestep_embedding(add_time_ids_fl, shape.0 * shape.1 * shape.2 * shape.3, 256).unwrap();
+    let shape = test.dim();
+    let test = test
+    .into_shape_with_order([1, 1, 2, shape.0 * shape.1 * shape.2 * shape.3 / 2])
+    .unwrap();
+    let test = ndarray::concatenate(ndarray::Axis(3), &[add_text_embs.view(), test.view()])
+    .unwrap()
+    .as_standard_layout()
+    .to_owned();
+    Ok(test)
 }

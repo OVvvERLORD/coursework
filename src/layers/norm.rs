@@ -4,6 +4,7 @@ use crate::layers::layer::Layer;
 use crate::func::functions::{input, output};
 use rayon::prelude::*;
 use ndarray::parallel::prelude::*;
+use ndarray::par_azip;
 pub struct GroupNorm{
     pub number_of_groups: usize,
     pub eps: f32,
