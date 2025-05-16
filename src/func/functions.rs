@@ -124,11 +124,12 @@ pub fn input (input_name: String) -> Result<ndarray::Array4<f32>, Box<dyn std::e
     Ok(tensor)
 }
 
-pub fn output(output_name: String, tensor_vec:Vec<f32>, shape_vec:Vec<usize>) -> Result<(), Box<dyn std::error::Error>> {
-    let binding = tensor_vec.to_vec();
+pub fn output(output_name: String, tensor: ndarray::Array4<f32>) -> Result<(), Box<dyn std::error::Error>> {
+    let shape = tensor.dim();
+    let binding = tensor.into_raw_vec_and_offset().0;
     let prep_output:&[u8] = bytemuck::cast_slice(&binding);
     let mut tensors = std::collections::HashMap::new();
-    tensors.insert("output_tensor".to_string(), safetensors::tensor::TensorView::new(safetensors::Dtype::F32, shape_vec.clone(), prep_output)?);
+    tensors.insert("output".to_string(), safetensors::tensor::TensorView::new(safetensors::Dtype::F32, vec![shape.0, shape.1, shape.2, shape.3], prep_output)?);
     let serialized_data = serialize(&tensors, &None)?;
     let mut file = File::create(output_name.to_string())?;
     file.write_all(&serialized_data)?;

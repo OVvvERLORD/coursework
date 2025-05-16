@@ -14,7 +14,7 @@ pub struct GroupNorm{
 
 impl Layer for GroupNorm {
     fn operation(&self,  args:&mut ndarray::Array4<f32>) -> Result<(), Box<dyn std::error::Error>> {
-        let shape = args.dim();
+        let shape = args.dim(); // try to refactor with parallel
         let ch_per_group = shape.1 / self.number_of_groups;
         let for_index_opt =  ch_per_group * shape.2 * shape.3;
         for batch_idx in 0..shape.0{
@@ -92,8 +92,8 @@ impl Layer for LayerNorm {
         .for_each(|x, &m, &v, &g, &b| {
             let std = (v + self.eps).sqrt();
             *x = (*x - m) / std *g + b;
-        }
-        );
+        } 
+        ); // try to parallel
         Ok(())
     }
 }

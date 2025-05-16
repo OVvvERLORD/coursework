@@ -1,3 +1,6 @@
+use std::time::Duration;
+use std::{fs, thread};
+use std::path::Path;
 use std::{rc::Rc, sync::mpsc::Receiver};
 use std::cell::{Ref, RefCell};
 use ndarray_einsum::einsum;
@@ -43,26 +46,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let encoder_cross = input(format!(r"C:\study\coursework\src\trash\test_unet_encoder.safetensors")).unwrap();
     let encoder_cross = Rc::new(RefCell::new(encoder_cross.remove_axis(ndarray::Axis(0))));
     let time_emb = Rc::new(RefCell::new(ndarray::Array4::from_elem([1, 1, 1, 1], 1.)));
-
     let res_hidden = Rc::new(RefCell::new(Vec::<ndarray::Array4<f32>>::new()));
-
     let mut unet = Unet2dConditionModel::new_weights_bias(encoder_cross, time_emb, res_hidden);
     let add_time_ids = input(format!(r"C:\study\coursework\src\trash\test_unet_add_time_ids.safetensors")).unwrap();
     let add_text_embs = input(format!(r"C:\study\coursework\src\trash\test_unet_add_text_embeds.safetensors")).unwrap();
     let kwargs = Rc::new(RefCell::new((add_time_ids, add_text_embs)));
     let mut tensor = input(format!(r"C:\study\coursework\src\trash\test_unet_input.safetensors")).unwrap();
-    let _ = unet.operation(&mut tensor, 1., kwargs).unwrap();
-    print!("{:?}", tensor);
-    let py_tensor = input(format!(r"C:\study\coursework\src\trash\test_unet_output.safetensors")).unwrap();
-    let shape = tensor.shape();
-    assert!(shape == py_tensor.shape());
-    for i in 0..shape[0] {
-        for j in 0..shape[1] {
-            for r in 0..shape[2] {
-                for k in 0..shape[3] {
-                    assert!((tensor[[i, j, r, k]] - py_tensor[[i, j, r, k]]).abs() <= 1e-4);
-                }
-            }
+    let timesteps = input(format!(r"C:\study\coursework\src\trash\test_unet_timesteps.safetensors")).unwrap();
+    let mut timesteps = timesteps.into_raw_vec_and_offset().0;
+    timesteps.reverse();
+    loop {
+        if timesteps.len() == 0 {break;}
+        if Path::new("procc.flag").exists() {
+            let timestep = timesteps.pop().unwrap();
+            print!("CURR: {:?}\n", timestep);
+            let mut tensor = input(format!(r"C:\study\coursework\src\trash\test_unet_input.safetensors")).unwrap();
+            let _ = unet.operation(&mut tensor, timestep, Rc::clone(&kwargs)).unwrap();
+            print!("\nRUST: {:?}\n", &tensor.clone().into_raw_vec_and_offset().0[..10]);
+            fs::remove_file(r"C:\study\coursework\src\trash\test_unet_output.safetensors").unwrap();
+            let _ = output(r"C:\study\coursework\src\trash\test_unet_output.safetensors".to_string(), tensor);
+            fs::remove_file("procc.flag").unwrap();
+        } else {
+            thread::sleep(Duration::from_millis(10));
         }
     }
     Ok(())
