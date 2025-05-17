@@ -529,13 +529,13 @@ for i, block in enumerate(unet.mid_block.named_children()):
 
 
 # unet.conv_in.bias = None
-save_file({"conv" : unet.conv_in.weight}, r"C:\study\coursework\src\trash\test_unet_conv_in.safetensors")
-save_file({"conv" : unet.conv_in.bias}, r"C:\study\coursework\src\trash\test_unet_conv_in_b.safetensors")
-save_file({"conv" : unet.conv_out.weight}, r"C:\study\coursework\src\trash\test_unet_conv_out.safetensors")
-save_file({"conv" : unet.conv_out.bias}, r"C:\study\coursework\src\trash\test_unet_conv_out_b.safetensors")
-save_file({"n" : unet.conv_norm_out.weight}, r"C:\study\coursework\src\trash\test_unet_norm_out.safetensors")
-save_file({"n" : unet.conv_norm_out.bias}, r"C:\study\coursework\src\trash\test_unet_norm_out_b.safetensors")
-print(unet.conv_in, unet.conv_out, unet.conv_norm_out)
+# save_file({"conv" : unet.conv_in.weight}, r"C:\study\coursework\src\trash\test_unet_conv_in.safetensors")
+# save_file({"conv" : unet.conv_in.bias}, r"C:\study\coursework\src\trash\test_unet_conv_in_b.safetensors")
+# save_file({"conv" : unet.conv_out.weight}, r"C:\study\coursework\src\trash\test_unet_conv_out.safetensors")
+# save_file({"conv" : unet.conv_out.bias}, r"C:\study\coursework\src\trash\test_unet_conv_out_b.safetensors")
+# save_file({"n" : unet.conv_norm_out.weight}, r"C:\study\coursework\src\trash\test_unet_norm_out.safetensors")
+# save_file({"n" : unet.conv_norm_out.bias}, r"C:\study\coursework\src\trash\test_unet_norm_out_b.safetensors")
+print(unet.conv_out)
 # unet.conv_norm_out.affine = False
 # unet.conv_norm_out.bias = None
 # unet.conv_norm_out.weight = None

@@ -11,7 +11,7 @@ use crate::{
     blocks::btb::BasicTransofmerBlock,
     func::functions::input
 };
-
+use rayon::prelude::*;
 pub struct Transformer2D {
     pub operations : Vec<Box<dyn Layer>>,
     pub number_of_basic : usize,

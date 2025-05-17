@@ -1,3 +1,5 @@
+use rayon::iter::IntoParallelRefIterator;
+use rayon::prelude::*;
 use crate::{
     blocks::{
         down::Down_blocks, mid::mid_block, resnet::Resnet2d, trans::Transformer2D, up::Up_blocks

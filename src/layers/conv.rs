@@ -40,8 +40,9 @@ impl Layer for Conv2d {
         ];
         let filter = cudnn::Cudnn::create_4d_filter::<f32>(&cudnn, cudnn::sys::cudnnTensorFormat_t::CUDNN_TENSOR_NCHW, actual_prep_shape)?;
         let mut conv = cudnn::Cudnn::create_conv2d::<f32>(&cudnn, [self.padding, self.padding], [self.stride, self.stride],[1;2], cudnn::sys::cudnnConvolutionMode_t::CUDNN_CROSS_CORRELATION)?;
-        conv.set_math_type(cudarc::cudnn::sys::cudnnMathType_t::CUDNN_TENSOR_OP_MATH).unwrap();
-        
+        // conv.set_math_type(cudarc::cudnn::sys::cudnnMathType_t::CUDNN_TENSOR_OP_MATH_ALLOW_CONVERSION).unwrap();
+        // conv.set_math_type(cudarc::cudnn::sys::cudnnMathType_t::CUDNN_TENSOR_OP_MATH).unwrap();
+        conv.set_math_type(cudarc::cudnn::sys::cudnnMathType_t::CUDNN_DEFAULT_MATH).unwrap();
             let op = cudnn::ConvForward {
                 conv: &conv,
                 x: &x_disc,
@@ -49,7 +50,10 @@ impl Layer for Conv2d {
                 y: &y_disc,
             };
 
-            let algo = if (self.stride == 1 && self.kernel_size != 1) {cudnn::sys::cudnnConvolutionFwdAlgo_t::CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD} else {cudnn::sys::cudnnConvolutionFwdAlgo_t::CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM};
+            let algo = if self.stride == 1 && self.kernel_size != 1
+            {cudnn::sys::cudnnConvolutionFwdAlgo_t::CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD}
+            // {cudnn::sys::cudnnConvolutionFwdAlgo_t::CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM}
+            else {cudnn::sys::cudnnConvolutionFwdAlgo_t::CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM};
             let workspace_size = op.get_workspace_size(algo)?;
             let mut workspace = dev.alloc_zeros::<u8>(workspace_size).unwrap();
 

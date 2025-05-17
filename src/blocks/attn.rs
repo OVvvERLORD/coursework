@@ -26,7 +26,7 @@ use crate::{
 
 use std::{rc::Rc, sync::atomic};
 use std::cell::RefCell;
-
+use rayon::prelude::*;
 use std::f32::consts::E;
 
 pub struct Attention {
@@ -88,7 +88,7 @@ impl Layer for Attention {
             self.encoder_hidden_tensor.borrow().dim()
         }; 
         let _ = &self.operations[0].operation(&mut q_tensor)?; 
-        
+
         let _ = &self.operations[1].operation(&mut k_tensor)?;
         let _ = &self.operations[2].operation(&mut v_tensor)?;
 
@@ -117,19 +117,25 @@ impl Layer for Attention {
         .as_standard_layout()
         .to_owned();
         let scale = 1. / (head_dim as f32).sqrt();
-
         let _ = Tensor_Mul(&mut q_tensor, &k_tensor).unwrap();
         q_tensor.mapv_inplace(|x| x * scale);
-
-        q_tensor.mapv_inplace(|x| x.exp());
-        let sigmas = q_tensor.sum_axis(ndarray::Axis(3)).insert_axis(ndarray::Axis(3));
         let q_shape = q_tensor.dim();
+        let max_vals = q_tensor.map_axis(ndarray::Axis(3), |row| {
+            row.fold(f32::NEG_INFINITY, |a, &b| a.max(b))
+        }).insert_axis(ndarray::Axis(3));
+
+        // q_tensor.mapv_inplace(|x| x.exp());
+        Zip::from(&mut q_tensor).and(&max_vals.broadcast(q_shape).unwrap()).for_each(|x, &m| {
+            *x = (*x - m).exp();
+        });
+        let sigmas = q_tensor.sum_axis(ndarray::Axis(3)).insert_axis(ndarray::Axis(3));
+        // let q_shape = q_tensor.dim();
         Zip::from(&mut q_tensor).and(&sigmas.broadcast(q_shape).unwrap()).for_each(|x, &s| {
             *x /= s;
         });
 
         let _ = Tensor_Mul(&mut q_tensor, &v_tensor).unwrap();
-
+        
         let q_shape = q_tensor.dim();
         q_tensor = q_tensor
         .permuted_axes([0, 2, 1, 3])
@@ -139,7 +145,6 @@ impl Layer for Attention {
         .as_standard_layout()
         .to_owned()
         .insert_axis(ndarray::Axis(0));
-
         let _ = &self.operations[3].operation(&mut q_tensor)?;
         q_tensor = if !initial_shape[0] == 1 
         {
@@ -222,6 +227,9 @@ impl Layer for CrossAttnUpBlock2D {
                 hidden_idx = if hidden_idx > 0 {hidden_idx - 1} else {0};
             }
             let _= layer.operation(args)?;
+            if args.par_iter().any(|&x| x.is_nan()){
+                print!("    POSLE ETOI OPS CROSSATTNUPBLOCK NAN: {:?}\n",i);
+            }
             // res_vec = temp_vec;
             // res_vec_shape = temp_vec_shape;
             idx += 1;

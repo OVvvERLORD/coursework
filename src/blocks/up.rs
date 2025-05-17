@@ -17,7 +17,7 @@ use crate::{
 
 use std::rc::Rc;
 use std::cell::RefCell;
-
+use rayon::prelude::*;
 pub struct Up_blocks {
     pub operations : Vec<Box<dyn Layer>>,
 }

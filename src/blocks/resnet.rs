@@ -10,7 +10,7 @@ use crate::layers::{
     layer::Layer
 };
 use crate::func::functions::{input};
-
+use rayon::prelude::*;
 pub struct Resnet2d {
     pub if_shortcut:bool,
     pub operations: Vec<Box<dyn Layer>>,
@@ -71,37 +71,22 @@ impl Layer for Resnet2d {
                 let mut time_emb = self.time_emb.borrow().to_owned();
                 let _ = self.operations[i].operation(&mut time_emb).unwrap(); // act
                 let _ = self.operations[i + 1].operation(&mut time_emb).unwrap(); // lin
-                // let mut curr_tensor = ndarray::Array4::from_shape_vec((res_shape_vec[0],res_shape_vec[1],res_shape_vec[2],res_shape_vec[3]), res_vec.clone())?;
-                // let time_tensor = ndarray::Array4::from_shape_vec((lin_res.1[2], lin_res.1[3], 1, 1), lin_res.0)?;
-                // curr_tensor = curr_tensor.clone() + time_tensor.broadcast(curr_tensor.dim()).unwrap();
                 let shape = time_emb.dim();
                 time_emb = time_emb.into_shape_with_order((shape.2, shape.3, 1, 1)).unwrap().to_owned();
                 let target = args.shape();
                 time_emb = time_emb.broadcast((target[0], target[1], target[2], target[3])).unwrap().to_owned();
                 *args += &time_emb;
-                // res_vec = curr_tensor.into_raw_vec_and_offset().0;
                 continue;
             }
             if i == 4{
                 continue;
             }
             let _ = self.operations[i].operation(args)?;
-            // res_vec = res.0.clone();
-            // res_shape_vec = res.1.clone();
         }
         if self.if_shortcut {
             let _ = self.operations[self.operations.len() - 1].operation(&mut initial_tensor)?;
-            // let shortcut_vec = shortcut_res.0;
-            // let mut curr_tensor = ndarray::Array4::from_shape_vec((res_shape_vec[0],res_shape_vec[1],res_shape_vec[2],res_shape_vec[3]), res_vec.clone())?;
-            // let short_tensor = ndarray::Array4::from_shape_vec((shortcut_res.1[0], shortcut_res.1[1], shortcut_res.1[2], shortcut_res.1[3]), shortcut_vec.clone())?;
-            // curr_tensor = curr_tensor.clone() + short_tensor.broadcast(curr_tensor.dim()).unwrap();
             *args += &initial_tensor.broadcast(args.shape()).unwrap();
-            // res_vec = curr_tensor.into_raw_vec_and_offset().0;
         } else {
-            // let mut curr_tensor =  ndarray::Array4::from_shape_vec((res_shape_vec[0],res_shape_vec[1],res_shape_vec[2],res_shape_vec[3]), res_vec.clone())?;
-            // let input_tensor =  ndarray::Array4::from_shape_vec((args.1[0],args.1[1], args.1[2], args.1[3]), args.0)?;
-            // curr_tensor = curr_tensor + input_tensor;
-            // res_vec = curr_tensor.into_raw_vec_and_offset().0;
             *args += &initial_tensor;
         }
         Ok(())

@@ -4,6 +4,8 @@ use std::path::Path;
 use std::{rc::Rc, sync::mpsc::Receiver};
 use std::cell::{Ref, RefCell};
 use ndarray_einsum::einsum;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::prelude::*;
 use core::f32;
 mod func;
 mod layers;
@@ -62,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             print!("CURR: {:?}\n", timestep);
             let mut tensor = input(format!(r"C:\study\coursework\src\trash\test_unet_input.safetensors")).unwrap();
             let _ = unet.operation(&mut tensor, timestep, Rc::clone(&kwargs)).unwrap();
-            print!("\nRUST: {:?}\n", &tensor.clone().into_raw_vec_and_offset().0[..10]);
+            // print!("\nRUST: {:?}\n", &tensor.clone().into_raw_vec_and_offset().0.par_iter().any(|&x| x.is_nan()));
             fs::remove_file(r"C:\study\coursework\src\trash\test_unet_output.safetensors").unwrap();
             let _ = output(r"C:\study\coursework\src\trash\test_unet_output.safetensors".to_string(), tensor);
             fs::remove_file("procc.flag").unwrap();

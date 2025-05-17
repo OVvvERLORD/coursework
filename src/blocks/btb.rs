@@ -15,6 +15,7 @@ use crate::{
 
 use std::rc::Rc;
 use std::cell::RefCell;
+use rayon::prelude::*;
 
 pub struct BasicTransofmerBlock {
     pub operations: Vec<Box<dyn Layer>>,

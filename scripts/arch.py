@@ -76,7 +76,12 @@ def test():
     #     model.scheduler,  num_inference_steps= 10
     # )
     # print(model.vae_scale_factor, model.default_sample_size)
-    prompt = ["A hyper realistic photo of a beautiful slavic girl, 8K UHD, NASA photography, detailed skin pores, cinematic lighting, photorealistic"] # cowboy riding a brown cow on Mars
+    # prompt = ["A hyper realistic photo of romanian warrios who is very angry, 8K UHD, NASA photography, detailed skin pores, cinematic lighting, photorealistic"] # cowboy riding a brown cow on Mars
+    # prompt = ["abstract colorful painting that can be used as background picture for a presentation, full screen coverance, really beautiful and neutral, 8K UHD, NASA photography, detailed skin pores, cinematic lighting, photorealistic"]
+    # prompt = ["pleasant picture of people celebrating the end of their studies, they all seem happy and excited, 8K UHD, NASA photography, detailed skin pores, cinematic lighting, photorealistic"]
+    # prompt = ["Anime-style ancient Greek warrior, comically oversized helmet with funny details (like feathers, horns, or a silly face), exaggerated armor with cute or absurd design, vibrant colors, dynamic pose, chibi or semi-realistic anime proportions, playful atmosphere, detailed background with Greek columns or olive trees, soft shading, Studio Ghibli-inspired, 4k high-quality artwork"]
+    prompt = ["Ultra-realistic horror photo of a dark forest, trees with twisted faces and glowing eyes, eerie mist, hyper-detailed skin-like bark, bloodshot veins, unsettling asymmetry, cinematic lighting, 8k, photorealistic, uncanny valley, no people, pure dread"]
+    # prompt = ["Warm final presentation slide, modern conference room with golden sunlight, diverse team smiling and clapping, large 'Thank You!' screen, fresh flowers on table, colorful notebooks, soft bokeh background, corporate friendly atmosphere, ultra-detailed 4k photorealistic style, inspiring positive mood"]
     print(model.check_inputs(prompt=prompt, prompt_2 = None, height = model.default_sample_size * model.vae_scale_factor, width = model.default_sample_size * model.vae_scale_factor, callback_steps=None))
     (
         prompt_embeds,
@@ -100,15 +105,15 @@ def test():
     )
 
     timesteps, num_inference_steps = retrieve_timesteps(
-        model.scheduler, 20,
+        model.scheduler, 80,
     )
 
     num_channels_latents = model.unet.config.in_channels
     latents = model.prepare_latents(
         1 * 1,
         num_channels_latents,
-        512,
-        512,
+        256,
+        256,
         prompt_embeds.dtype,
         model.device,
         torch.manual_seed(42)
@@ -123,9 +128,9 @@ def test():
 
 
     add_time_ids = model._get_add_time_ids(
-        (512, 512),
+        (256, 256),
         (0, 0),
-        (512, 512),
+        (256, 256),
         dtype=prompt_embeds.dtype,
         text_encoder_projection_dim=text_encoder_projection_dim,
     )
@@ -251,7 +256,7 @@ def test():
     image = model.image_processor.postprocess(image, output_type="pil")
     model.maybe_free_model_hooks()
 
-
+    image[0].save('backgroundv2.png')
     plt.imshow(image[0])
     plt.axis("off")
     plt.show()
