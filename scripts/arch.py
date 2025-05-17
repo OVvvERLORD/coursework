@@ -105,15 +105,15 @@ def test():
     )
 
     timesteps, num_inference_steps = retrieve_timesteps(
-        model.scheduler, 80,
+        model.scheduler, 10,
     )
 
     num_channels_latents = model.unet.config.in_channels
     latents = model.prepare_latents(
         1 * 1,
         num_channels_latents,
-        256,
-        256,
+        512,
+        512,
         prompt_embeds.dtype,
         model.device,
         torch.manual_seed(42)
@@ -128,9 +128,9 @@ def test():
 
 
     add_time_ids = model._get_add_time_ids(
-        (256, 256),
+        (512, 512),
         (0, 0),
-        (256, 256),
+        (512, 512),
         dtype=prompt_embeds.dtype,
         text_encoder_projection_dim=text_encoder_projection_dim,
     )
